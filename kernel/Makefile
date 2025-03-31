@@ -33,7 +33,10 @@ kernel/kernel.o \
 kernel/global_constructors.o \
 kernel/GDT/gdt_setup.o \
 kernel/IDT/idt_setup.o \
-kernel/IO/io.o \
+kernel/PIC/pic.o \
+kernel/IRQ/isr_and_irr.o \
+kernel/IRQ/mask.o \
+
 
 OBJS=\
 $(ARCHDIR)/crti.o \

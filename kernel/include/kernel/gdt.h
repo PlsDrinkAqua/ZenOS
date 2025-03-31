@@ -1,5 +1,5 @@
 #ifndef _GDT_H
-#define _GDT_H 1
+#define _GDT_H
 
 /* Prototypes for GDT setup functions. */
 void gdt_install(void);
