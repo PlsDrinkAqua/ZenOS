@@ -1,4 +1,4 @@
-#include <sys/gdt.h>
+#include <kernel/gdt.h>
 #define NUM_ENTRIES 3
 
 /* A GDT entry is 8 bytes long. We pack the structure to prevent any unwanted padding. */

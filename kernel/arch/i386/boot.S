@@ -25,9 +25,12 @@ stack_top:
 .type _start, @function
 _start:
     movl $stack_top, %esp
-    
+
     # Set up the Global Descriptor Table (GDT) using our C code.
     call gdt_install
+
+    # Set up the Interrupt Descriptor Table (IDT) using our C code.
+    call idt_install
 
     # Call the global constructors.
     call _init
