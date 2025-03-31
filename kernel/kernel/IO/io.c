@@ -10,3 +10,8 @@ static inline uint8_t inb(uint16_t port) {
     asm volatile ("inb %w1, %0" : "=a"(value) : "Nd"(port));
     return value;
 }
+
+static inline void io_wait(void)
+{
+    outb(0x80, 0);
+}
