@@ -34,8 +34,12 @@ kernel/global_constructors.o \
 kernel/GDT/gdt_setup.o \
 kernel/IDT/idt_setup.o \
 kernel/PIC/pic.o \
-kernel/IRQ/isr_and_irr.o \
 kernel/IRQ/mask.o \
+kernel/IRQ/isr_and_irr.o \
+kernel/IRQ/irq.o \
+kernel/IRQ/interrupt_handler.o \
+kernel/ISR/KEYBOARD/keyboard.o \
+kernel/ISR/TIMER/timer.o \
 
 
 OBJS=\

@@ -25,6 +25,8 @@ static inline void idt_flush(void)
         : "memory"
     );
 }
+extern void _irq0(void);
+extern void _irq1(void);
 
 /* Install the IDT by setting up the pointer and defining entries. */
 void idt_install(void)
@@ -35,6 +37,7 @@ void idt_install(void)
 
     /* Clear the IDT */
     memset(&idt, 0, sizeof(struct idt_entry) * 256);
+
 
     /* Example: Set gate for interrupt 0 (divide-by-zero exception) 
        Note: You must implement the ISR (interrupt service routine) for each interrupt.
@@ -47,6 +50,10 @@ void idt_install(void)
     // idt_set_gate(0, (uint32_t)isr0, 0x08, 0x8E);
 
     /* Set additional IDT entries as needed here... */
+    
+    /* Set the keyboard ISR (IRQ1 remapped to vector 0x21) */
+    idt_set_gate(0x20, (uint32_t)_irq0, 0x08, 0x8E);
+    idt_set_gate(0x21, (uint32_t)_irq1, 0x08, 0x8E);
 
     /* Load the new IDT */
     idt_flush();

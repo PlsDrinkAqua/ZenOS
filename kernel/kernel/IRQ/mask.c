@@ -9,6 +9,8 @@
 #define PIC2_COMMAND	PIC2
 #define PIC2_DATA	(PIC2+1)
 
+extern int debug;
+
 void IRQ_set_mask(uint8_t IRQline) {
     uint16_t port;
     uint8_t value;
@@ -24,6 +26,7 @@ void IRQ_set_mask(uint8_t IRQline) {
 }
 
 void IRQ_clear_mask(uint8_t IRQline) {
+    debug++;
     uint16_t port;
     uint8_t value;
 

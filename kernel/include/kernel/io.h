@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-// Since they are all static inline function, we need to declare and define them in the same header file
+// Since they are all static inline functions, we need to declare and define them in the same header file
 static inline void outb(uint16_t port, uint8_t value) {
     __asm__ volatile ("outb %0, %1" : : "a"(value), "Nd"(port));
 }
