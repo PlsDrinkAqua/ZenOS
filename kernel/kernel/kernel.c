@@ -7,6 +7,7 @@
 #include <kernel/multiboot.h>
 #include <kernel/gdt.h>
 #include <kernel/idt.h>
+#include <kernel/pmm.h>
 
 int debug = 4;
 
@@ -25,6 +26,9 @@ void kernel_main(multiboot_info_t* mbd, uint32_t magic) {
 	printf("Initilizing Global Constructor.................");
 	__asm__ volatile ("call _init");
 	printf("done \n");
+
+	printf("Initilizing Physical Memory Manager.................");
+	mm_init(mbd , magic);
 
 	printf("Initilizing PIC.................");
 	PIC_remap(32, 40);

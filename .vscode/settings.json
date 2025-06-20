@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "compare": "cpp",
-        "pic.h": "c"
+        "pic.h": "c",
+        "multiboot.h": "c"
     }
 }

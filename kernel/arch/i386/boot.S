@@ -1,129 +1,100 @@
-# Declare constants for the multiboot header.
+# Define high-half offset
+.set ADDR_OFFSET, 0xC0000000
+
+# Multiboot header constants
 .set ALIGN,    1<<0             # align loaded modules on page boundaries
 .set MEMINFO,  1<<1             # provide memory map
-.set FLAGS,    ALIGN | MEMINFO  # this is the Multiboot 'flag' field
-.set MAGIC,    0x1BADB002       # 'magic number' lets bootloader find the header
-.set CHECKSUM, -(MAGIC + FLAGS) # checksum of above, to prove we are multiboot
+.set FLAGS,    ALIGN | MEMINFO  # multiboot 'flag' field
+.set MAGIC,    0x1BADB002       # boot header magic
+.set CHECKSUM, -(MAGIC + FLAGS) # header checksum
 
-# Declare a header as in the Multiboot Standard.
 .section .multiboot, "aw"
 .align 4
 .long MAGIC
 .long FLAGS
 .long CHECKSUM
 
-# Reserve a stack for the initial thread.
+# Reserve stack for initial thread
 .section .bss
 .align 16
 stack_bottom:
 .skip 16384            # 16 KiB
 stack_top:
 
-# Preallocate pages used for paging. Don't hard-code addresses and assume they
-# are available, as the bootloader might have loaded its multiboot structures or
-# modules there. This lets the bootloader know it must avoid the addresses.
+# Preallocate paging structures
 .section .bss, "aw", @nobits
-	.align 4096
+.align 4096
 boot_page_directory:
-	.skip 4096
+.skip 4096
 boot_page_table1:
-	.skip 4096
+.skip 4096
 
-# The kernel entry point.
+# Kernel entry point
 .section .text
 .global _start
 .type _start, @function
 _start:
-    # Physical address of boot_page_table1.
-	# TODO: I recall seeing some assembly that used a macro to do the
-	#       conversions to and from physical. Maybe this should be done in this
-	#       code as well?
-	movl $(boot_page_table1 - 0xC0000000), %edi
-	# First address to map is address 0.
-	# TODO: Start at the first kernel page instead. Alternatively map the first
-	#       1 MiB as it can be generally useful, and there's no need to
-	#       specially map the VGA buffer.
-	movl $0, %esi
-	# Map 1023 pages. The 1024th will be the VGA text buffer.
-	movl $1023, %ecx
-    1:
-	# Only map the kernel.
-	cmpl $_kernel_start, %esi
-	jl 2f
-	cmpl $(_kernel_end - 0xC0000000), %esi
-	jge 3f
+    # Load physical address of page table
+    movl $(boot_page_table1 - ADDR_OFFSET), %edi
 
-	# Map physical address as "present, writable". Note that this maps
-	# .text and .rodata as writable. Mind security and map them as non-writable.
-	movl %esi, %edx
-	orl $0x003, %edx
-	movl %edx, (%edi)
+    # Map every 4K page from phys 0 up to _kernel_end
+    movl $0, %esi                   # physical address
+1:
+    cmpl $(_kernel_end - ADDR_OFFSET), %esi
+    jge 2f                         # done mapping kernel region
+
+    # entry = phys | present | writable
+    movl %esi, %edx
+    orl $0x003, %edx
+    movl %edx, (%edi)
+
+    # advance to next page/table entry
+    addl $4096, %esi               # next physical page
+    addl $4,    %edi               # next PTE
+    jmp 1b
 
 2:
-	# Size of page is 4096 bytes.
-	addl $4096, %esi
-	# Size of entries in boot_page_table1 is 4 bytes.
-	addl $4, %edi
-	# Loop to the next entry if we haven't finished.
-	loop 1b
+    # Map VGA text buffer at last PTE (index 1023)
+    movl $(0x000B8000 | 0x003), boot_page_table1 - ADDR_OFFSET + 1023*4
 
-3:
-	# Map VGA video memory to 0xC03FF000 as "present, writable".
-	movl $(0x000B8000 | 0x003), boot_page_table1 - 0xC0000000 + 1023 * 4
+    # Install page table at PDE 0 and PDE 768 (0xC0000000)
+    movl $(boot_page_table1 - ADDR_OFFSET + 0x003), \
+         boot_page_directory - ADDR_OFFSET + 0
+    movl $(boot_page_table1 - ADDR_OFFSET + 0x003), \
+         boot_page_directory - ADDR_OFFSET + 768*4
 
-	# The page table is used at both page directory entry 0 (virtually from 0x0
-	# to 0x3FFFFF) (thus identity mapping the kernel) and page directory entry
-	# 768 (virtually from 0xC0000000 to 0xC03FFFFF) (thus mapping it in the
-	# higher half). The kernel is identity mapped because enabling paging does
-	# not change the next instruction, which continues to be physical. The CPU
-	# would instead page fault if there was no identity mapping.
+    # Load CR3 with page directory phys address
+    movl $(boot_page_directory - ADDR_OFFSET), %ecx
+    movl %ecx, %cr3
 
-	# Map the page table to both virtual addresses 0x00000000 and 0xC0000000.
-	movl $(boot_page_table1 - 0xC0000000 + 0x003), boot_page_directory - 0xC0000000 + 0
-	movl $(boot_page_table1 - 0xC0000000 + 0x003), boot_page_directory - 0xC0000000 + 768 * 4
+    # Enable paging + write-protect
+    movl %cr0, %ecx
+    orl $0x80010000, %ecx
+    movl %ecx, %cr0
 
-	# Set cr3 to the address of the boot_page_directory.
-	movl $(boot_page_directory - 0xC0000000), %ecx
-	movl %ecx, %cr3
-
-	# Enable paging and the write-protect bit.
-	movl %cr0, %ecx
-	orl $0x80010000, %ecx
-	movl %ecx, %cr0
-
-	# Jump to higher half with an absolute jump. 
-	lea 4f, %ecx
-	jmp *%ecx
+    # Jump to higher-half code
+    lea 4f, %ecx
+    jmp *%ecx
 
 4:
-	# At this point, paging is fully set up and enabled.
+    # Unmap identity PDE 0
+    movl $0, boot_page_directory + 0
 
-	# Unmap the identity mapping as it is now unnecessary. 
-	movl $0, boot_page_directory + 0
+    # Flush TLB by reloading CR3
+    movl %cr3, %ecx
+    movl %ecx, %cr3
 
-	# Reload crc3 to force a TLB flush so the changes to take effect.
-	movl %cr3, %ecx
-	movl %ecx, %cr3
+    # Set up stack
+    movl $stack_top, %esp
 
-	# Set up the stack.
-	movl $stack_top, %esp
+    # Call high-level kernel
+    pushl %eax   # magic
+    pushl %ebx   # mbd
+    call kernel_main
 
-    # Set up the Global Descriptor Table (GDT) using our C code.
-    call gdt_install
-
-    # Set up the Interrupt Descriptor Table (IDT) using our C code.
-    call idt_install
-
-    # Call the global constructors.
-    call _init
-
-
-	# Enter the high-level kernel.
-	call kernel_main
-
-
-    # Hang if kernel_main unexpectedly returns.
+    # If kernel returns, halt
     cli
-1:  hlt
-    jmp 1b
-.size _start, . - _start
+halt_loop:
+    hlt
+    jmp halt_loop
+.size _start, .- _start
