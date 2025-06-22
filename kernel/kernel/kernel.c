@@ -28,7 +28,8 @@ void kernel_main(multiboot_info_t* mbd, uint32_t magic) {
 	printf("done \n");
 
 	printf("Initilizing Physical Memory Manager.................");
-	mm_init(mbd , magic);
+	pmm_init(mbd , magic);
+	printf("done \n");
 
 	printf("Initilizing PIC.................");
 	PIC_remap(32, 40);

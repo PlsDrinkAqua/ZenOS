@@ -2,64 +2,127 @@
 #include "kernel/pmm.h"
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 #define ADDR_OFFSET 0xC0000000U
 
+// 4 GiB 物理空间，按 4 KiB 一页管理
+#define PAGE_SIZE       0x1000U                          // 4 KiB
+#define MAX_PHYS_MEM    (4ULL * 1024 * 1024 * 1024)       // 4 GiB
+#define MAX_FRAMES      (MAX_PHYS_MEM / PAGE_SIZE)        // 1 048 576
+#define BITMAP_BYTES    (MAX_FRAMES / 8)                  // 131 072
+
+// 把 physaddr 向下对齐到 PAGE_SIZE 的边界
+#define ALIGN_DOWN(a, sz)   ((a) & ~((sz) - 1))
+
+static uint8_t pmm_bitmap[BITMAP_BYTES];
+
+// 位图基本操作
+static inline void bitmap_set(uint32_t bit)   { pmm_bitmap[bit >> 3] |=  (1 << (bit & 7)); }
+static inline void bitmap_clear(uint32_t bit) { pmm_bitmap[bit >> 3] &= ~(1 << (bit & 7)); }
+static inline int  bitmap_test(uint32_t bit)  { return (pmm_bitmap[bit >> 3] >> (bit & 7)) & 1; }
 
 
-// 返回 mmap entry 的起始物理地址（base）
-static inline uint64_t mmap_entry_base(const multiboot_memory_map_t *mmmt) {
-    return ((uint64_t)mmmt->addr_high << 32) | mmmt->addr_low;
-}
 
-// 返回 mmap entry 的长度
-static inline uint64_t mmap_entry_length(const multiboot_memory_map_t *mmmt) {
-    return ((uint64_t)mmmt->len_high  << 32) | mmmt->len_low;
-}
-
-
-void mm_init(multiboot_info_t* mbd, uint32_t magic)
+void pmm_init(multiboot_info_t* mbd, uint32_t magic)
 {
+
+    // 1) 全图置 1
+    memset(pmm_bitmap, 0xFF, BITMAP_BYTES);
+
     /* Make sure the magic number matches for memory mapping*/
     if(magic != MULTIBOOT_BOOTLOADER_MAGIC) {
         printf("invalid magic number! \n");
-    }else{
-        printf("done \n");
     }
 
     // Convert the physical pointer to its high-half virtual address:
     mbd = (multiboot_info_t*)((uintptr_t)mbd + ADDR_OFFSET);
 
-    
 
     /* Check bit 6 to see if we have a valid memory map */
     if(!(mbd->flags >> 6 & 0x1)) {
         printf("invalid memory map given by GRUB bootloader \n");
     }
 
-    /* Loop through the memory map and display the values */
-    printf("Looping through memory map\n");
-    int i;
-    for(i = 0; i < mbd->mmap_length; 
-        i += sizeof(multiboot_memory_map_t)) 
-    {
-        multiboot_memory_map_t* mmmt = 
-            (multiboot_memory_map_t*) (mbd->mmap_addr + i);
-        mmmt = (multiboot_memory_map_t*)((uintptr_t)mmmt + ADDR_OFFSET);
+    // 2) 遍历 multiboot memory map，把 type=1 的页清空为“空闲”
+    uint32_t entries = mbd->mmap_length / sizeof(multiboot_memory_map_t);
+    multiboot_memory_map_t* map =
+        (multiboot_memory_map_t*)(uintptr_t)(mbd->mmap_addr + ADDR_OFFSET);
 
-        /*Because we are in 32 bit system, no need to get info of addr_high and len_high*/
-        printf("Start Addr: 0x%x |Length: %x | Size: %x | Type: %d\n",
-            mmmt->addr_low,mmmt->len_low , mmmt->size, mmmt->type);
+    for(uint32_t i = 0; i < entries; i++) {
+        uint32_t base = map->addr_low;
+        uint32_t len  = map->len_low;
 
-        if(mmmt->type == MULTIBOOT_MEMORY_AVAILABLE) {
-            /* 
-             * Do something with this memory block!
-             * BE WARNED that some of memory shown as availiable is actually 
-             * actively being used by the kernel! You'll need to take that
-             * into account before writing to memory!
-             */
+        if(map->type == MULTIBOOT_MEMORY_AVAILABLE) {
+            uint32_t start = (base + PAGE_SIZE - 1) / PAGE_SIZE;
+            uint32_t end   = (base + len) / PAGE_SIZE;
+            for(uint32_t f = start; f < end; f++) {
+                bitmap_clear(f);
+            }
         }
+        // advance to next entry: size 字段后面紧跟下一条
+        map = (multiboot_memory_map_t*)
+              ((uintptr_t)map + map->size + sizeof(map->size));
     }
-    printf("done \n");
+
+    // 3) 把内核自身占用的页又标回“占用”
+    extern uint8_t _kernel_start, _kernel_end;
+    uint32_t kstart = (uint32_t)&_kernel_start / PAGE_SIZE;
+    uint32_t kend   = ((uint32_t)&_kernel_end + PAGE_SIZE - 1) / PAGE_SIZE;
+    for(uint32_t f = kstart; f < kend; f++) {
+        bitmap_set(f);
+    }
+    
 }
 
+// 按页分配：先扫描 last_alloc 开始的空闲页
+static uint32_t last_alloc = 0;
+uint32_t pmm_alloc_frame(void)
+{
+    for(uint32_t i = last_alloc; i < MAX_FRAMES; i++) {
+        if(!bitmap_test(i)) {
+            bitmap_set(i);
+            last_alloc = i + 1;
+            return i * PAGE_SIZE;
+        }
+    }
+    for(uint32_t i = 0; i < last_alloc; i++) {
+        if(!bitmap_test(i)) {
+            bitmap_set(i);
+            last_alloc = i + 1;
+            return i * PAGE_SIZE;
+        }
+    }
+    return 0;  // 没有空闲页了
+}
+
+// 释放物理页
+void pmm_free_frame(uint32_t physaddr)
+{
+    uint32_t frame = physaddr / PAGE_SIZE;
+    bitmap_clear(frame);
+    if(frame < last_alloc) last_alloc = frame;
+}
+
+void pmm_test_frame(uint32_t physaddr)
+{
+    // 1) 对齐到页起始
+    uint32_t page_addr = ALIGN_DOWN(physaddr, PAGE_SIZE);
+    // 2) 计算对应的 frame 索引
+    uint32_t frame = page_addr / PAGE_SIZE;
+
+    // 3) 越界检查
+    if (frame >= MAX_FRAMES) {
+        printf("pmm_test_frame: address 0x%x out of managed range\n", physaddr);
+        return;
+    }
+
+    // 4) 查询位图
+    if (bitmap_test(frame)) {
+        printf("Frame at phys 0x%x [%u] is **allocated**\n",
+               page_addr, frame);
+    } else {
+        printf("Frame at phys 0x%x [%u] is **available**\n",
+               page_addr, frame);
+    }
+}
