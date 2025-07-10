@@ -8,6 +8,7 @@
 #include <kernel/gdt.h>
 #include <kernel/idt.h>
 #include <kernel/pmm.h>
+#include <kernel/vmm.h>
 
 int debug = 4;
 
@@ -29,6 +30,12 @@ void kernel_main(multiboot_info_t* mbd, uint32_t magic) {
 
 	printf("Initilizing Physical Memory Manager.................");
 	pmm_init(mbd , magic);
+	printf("done \n");
+
+	printf("Initilizing Virtual Memory Manager.................");
+	vmm_init();
+	vmm_test();
+	vmm_test_region();
 	printf("done \n");
 
 	printf("Initilizing PIC.................");

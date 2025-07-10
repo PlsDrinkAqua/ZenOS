@@ -24,8 +24,10 @@ stack_top:
 # Preallocate paging structures
 .section .bss, "aw", @nobits
 .align 4096
+.globl boot_page_directory
 boot_page_directory:
 .skip 4096
+.globl boot_page_table1
 boot_page_table1:
 .skip 4096
 

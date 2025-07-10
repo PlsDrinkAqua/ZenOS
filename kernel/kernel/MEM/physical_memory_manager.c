@@ -93,7 +93,7 @@ uint32_t pmm_alloc_frame(void)
             return i * PAGE_SIZE;
         }
     }
-    return 0;  // 没有空闲页了
+    return -1;  // 没有空闲页了
 }
 
 // 释放物理页

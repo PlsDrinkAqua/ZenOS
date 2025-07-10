@@ -41,6 +41,7 @@ kernel/IRQ/interrupt_handler.o \
 kernel/ISR/KEYBOARD/keyboard.o \
 kernel/ISR/TIMER/timer.o \
 kernel/MEM/physical_memory_manager.o\
+kernel/MEM/virtual_memory_manager.o\
 
 
 OBJS=\
