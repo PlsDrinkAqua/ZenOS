@@ -47,7 +47,7 @@ int vmm_map_page(uintptr_t vaddr, uintptr_t paddr, uint32_t flags) {
     // 1) 分配/挂载页表
     if (!current_pd->entries[pd_idx].present) {
         uint32_t phys = pmm_alloc_frame();
-        if (phys < 0) return -1;
+        if (!phys) return -1;
         page_table_t *pt = (page_table_t*)(phys + KERNEL_VIRT_OFFSET);
         memset(pt, 0, sizeof(page_table_t));
         current_pd->entries[pd_idx].frame   = phys >> 12;
@@ -135,7 +135,7 @@ int vmm_map_region(uintptr_t vstart,
         else
             phys = pmm_alloc_frame();  // 直接返回物理地址
 
-        if (phys < 0)
+        if (!phys)
             return -1;
 
         if (vmm_map_page(va, phys, flags) < 0)
@@ -165,7 +165,7 @@ int vmm_unmap_region(uintptr_t vstart,
 void vmm_test(void) {
     // 1) 申请一个物理页
     uint32_t phys_test = pmm_alloc_frame();
-    if (phys_test == -1) {
+    if (!phys_test) {
         printf("vmm_test: pmm_alloc_frame failed\n");
         return;
     }

@@ -72,6 +72,12 @@ void pmm_init(multiboot_info_t* mbd, uint32_t magic)
     for(uint32_t f = kstart; f < kend; f++) {
         bitmap_set(f);
     }
+
+    uint32_t zero_addr = pmm_alloc_frame();
+    if(zero_addr){
+        printf("Physical memory manager initilizatio failed \n");
+        asm volatile ("1: jmp 1b");
+    }
     
 }
 
@@ -93,7 +99,7 @@ uint32_t pmm_alloc_frame(void)
             return i * PAGE_SIZE;
         }
     }
-    return -1;  // 没有空闲页了
+    return 0;  // 没有空闲页了
 }
 
 // 释放物理页

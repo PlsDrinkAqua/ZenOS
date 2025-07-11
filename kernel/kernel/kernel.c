@@ -9,6 +9,7 @@
 #include <kernel/idt.h>
 #include <kernel/pmm.h>
 #include <kernel/vmm.h>
+#include <kernel/kha.h>
 
 int debug = 4;
 
@@ -34,8 +35,10 @@ void kernel_main(multiboot_info_t* mbd, uint32_t magic) {
 
 	printf("Initilizing Virtual Memory Manager.................");
 	vmm_init();
-	vmm_test();
-	vmm_test_region();
+	printf("done \n");
+
+	printf("Initilizing Kernel Heap Allocator.................");
+	vmm_heap_init();
 	printf("done \n");
 
 	printf("Initilizing PIC.................");
