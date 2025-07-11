@@ -47,7 +47,7 @@ int vmm_map_page(uintptr_t vaddr, uintptr_t paddr, uint32_t flags) {
     // 1) 分配/挂载页表
     if (!current_pd->entries[pd_idx].present) {
         uint32_t phys = pmm_alloc_frame();
-        if (!phys) return -1;
+        if (phys < 0) return -1;
         page_table_t *pt = (page_table_t*)(phys + KERNEL_VIRT_OFFSET);
         memset(pt, 0, sizeof(page_table_t));
         current_pd->entries[pd_idx].frame   = phys >> 12;
