@@ -10,6 +10,7 @@
 #include <kernel/pmm.h>
 #include <kernel/vmm.h>
 #include <kernel/kha.h>
+#include <kernel/kmalloc.h>
 
 int debug = 4;
 
@@ -44,6 +45,8 @@ void kernel_main(multiboot_info_t* mbd, uint32_t magic) {
 	printf("Initilizing PIC.................");
 	PIC_remap(32, 40);
 	printf("done \n");
+
+    kmalloc_test();
 	// Enable the IRQ for the keyboard by clearing its mask.
 	// IRQ_clear_mask(0);
 
