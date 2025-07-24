@@ -14,6 +14,22 @@ _irq1:
    pushl $33          # Push interrupt number (32)
    jmp irq_common_stub
 
+.global  _irq14
+.align   4
+_irq14:
+    cli
+    pushl $0       # Dummy error code
+    pushl $0x2E    # Interrupt vector 46 (IRQ14 remapped to 0x28+6)
+    jmp irq_common_stub
+
+.global  _irq15
+.align   4
+_irq15:
+    cli
+    pushl $0       # Dummy error code
+    pushl $0x2F    # Interrupt vector 47 (IRQ15 remapped to 0x28+7)
+    jmp irq_common_stub
+
     
 .global   irq_common_stub
 .align   4

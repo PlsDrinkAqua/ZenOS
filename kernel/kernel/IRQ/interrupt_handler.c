@@ -28,6 +28,12 @@ void interrupt_handler(registers_t *regs)
             // Call the keyboard interrupt service routine if int_num is 32
             keyboard_isr();
             break;
+        case 46:  // IRQ14: Primary ATA
+            timer_isr();
+            break;
+        case 47:  // IRQ15: Secondary ATA
+            timer_isr();
+            break;
         default:
             // For other interrupts, do nothing
             break;

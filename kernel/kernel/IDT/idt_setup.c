@@ -1,6 +1,9 @@
 #include "kernel/idt.h"
 #include <string.h>  // For memset, if available in your freestanding libc
 
+#define ATA_IRQ_MASTER  (0x20 + 14)  // 0x2E
+#define ATA_IRQ_SECOND  (0x20 + 15)  // 0x2F
+
 /* Define an IDT with 256 entries. */
 struct idt_entry idt[256];
 struct idt_ptr idtp;
@@ -27,6 +30,9 @@ static inline void idt_flush(void)
 }
 extern void _irq0(void);
 extern void _irq1(void);
+extern void _irq14(void);
+extern void _irq15(void);
+
 
 /* Install the IDT by setting up the pointer and defining entries. */
 void idt_install(void)
@@ -55,6 +61,8 @@ void idt_install(void)
     idt_set_gate(0x20, (uint32_t)_irq0, 0x08, 0x8E);
     idt_set_gate(0x21, (uint32_t)_irq1, 0x08, 0x8E);
 
+    idt_set_gate(ATA_IRQ_MASTER, (uint32_t)_irq14, 0x08, 0x8E);
+    idt_set_gate(ATA_IRQ_SECOND, (uint32_t)_irq15, 0x08, 0x8E);
     /* Load the new IDT */
     idt_flush();
 }

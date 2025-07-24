@@ -11,6 +11,7 @@
 #include <kernel/vmm.h>
 #include <kernel/kha.h>
 #include <kernel/kmalloc.h>
+#include <kernel/ata.h>
 
 int debug = 4;
 
@@ -47,12 +48,14 @@ void kernel_main(multiboot_info_t* mbd, uint32_t magic) {
 	printf("done \n");
 
     kmalloc_test();
+	disk_test();
 	// Enable the IRQ for the keyboard by clearing its mask.
 	// IRQ_clear_mask(0);
 
 	// Enable interrupts globally.
 	printf("Enabling interrupts.................");
 	__asm__ volatile ("sti");
+	// asm volatile ("1: jmp 1b");
 	printf("done \n");
 	printf("Hello, kernel World!\n");
 	while(1){
