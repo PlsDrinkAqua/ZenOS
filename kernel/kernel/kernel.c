@@ -12,6 +12,7 @@
 #include <kernel/kha.h>
 #include <kernel/kmalloc.h>
 #include <kernel/ata.h>
+#include <kernel/ext2.h>
 
 int debug = 4;
 
@@ -35,7 +36,7 @@ void kernel_main(multiboot_info_t* mbd, uint32_t magic) {
 	pmm_init(mbd , magic);
 	printf("done \n");
 
-	printf("Initilizing Virtual Memory Manager.................");
+	printf("Initilizing Virtual Memory Manager.................\n");
 	vmm_init();
 	printf("done \n");
 
@@ -45,12 +46,20 @@ void kernel_main(multiboot_info_t* mbd, uint32_t magic) {
 
 	printf("Initilizing PIC.................");
 	PIC_remap(32, 40);
+	// 屏蔽 ATA 主从中断（14 和 15）
+    IRQ_set_mask(14);   // 屏蔽主 ATA（原 IRQ14）
+    IRQ_set_mask(15);   // 屏蔽从 ATA（原 IRQ15）
 	printf("done \n");
 
-    kmalloc_test();
-	disk_test();
-	// Enable the IRQ for the keyboard by clearing its mask.
-	// IRQ_clear_mask(0);
+
+	printf("Initilizing ATA PIO Driver.................");
+	block_devices_init();
+	printf("done \n");
+
+	printf("Initilizing EXT2 File System.................");
+	ext2_init();
+	printf("done \n");
+
 
 	// Enable interrupts globally.
 	printf("Enabling interrupts.................");

@@ -30,8 +30,9 @@ static inline void idt_flush(void)
 }
 extern void _irq0(void);
 extern void _irq1(void);
-extern void _irq14(void);
-extern void _irq15(void);
+extern void _isr14(void);
+// extern void _irq14(void);
+// extern void _irq15(void);
 
 
 /* Install the IDT by setting up the pointer and defining entries. */
@@ -61,8 +62,16 @@ void idt_install(void)
     idt_set_gate(0x20, (uint32_t)_irq0, 0x08, 0x8E);
     idt_set_gate(0x21, (uint32_t)_irq1, 0x08, 0x8E);
 
-    idt_set_gate(ATA_IRQ_MASTER, (uint32_t)_irq14, 0x08, 0x8E);
-    idt_set_gate(ATA_IRQ_SECOND, (uint32_t)_irq15, 0x08, 0x8E);
+    // idt_set_gate(ATA_IRQ_MASTER, (uint32_t)_irq14, 0x08, 0x8E);
+    // idt_set_gate(ATA_IRQ_SECOND, (uint32_t)_irq15, 0x08, 0x8E);
     /* Load the new IDT */
+
+        /* 注册 Page Fault（Exception Vector 14） */
+    idt_set_gate(
+        0x0E,             // 向量号 14
+        (uint32_t)_isr14, // 汇编入口
+        0x08,             // 代码段选择子
+        0x8E              // P=1，DPL=0，32-bit 中断门
+    );
     idt_flush();
 }

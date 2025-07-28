@@ -41,11 +41,10 @@ typedef struct __attribute__((aligned(4096))) {
     page_table_entry_t pages[PAGE_TABLE_ENTRIES];
 } page_table_t;
 
-// 页目录：一页 4 KiB，1024 个 PDE + 1024 个页表指针
+
 typedef struct __attribute__((aligned(4096))) {
-    page_directory_entry_t entries[PAGE_DIR_ENTRIES];
-    // C 访问时用的虚拟指针数组，指向对应的 page_table_t（若未分配则为 NULL）
-    page_table_t *ref_tables[PAGE_DIR_ENTRIES];
+  page_directory_entry_t entries[PAGE_DIR_ENTRIES];
 } page_directory_t;
+
 
 #endif // PAGING_H

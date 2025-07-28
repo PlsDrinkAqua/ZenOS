@@ -2,6 +2,7 @@
     "files.associations": {
         "compare": "cpp",
         "pic.h": "c",
-        "multiboot.h": "c"
+        "multiboot.h": "c",
+        "stdarg.h": "c"
     }
 }

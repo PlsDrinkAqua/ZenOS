@@ -102,55 +102,55 @@ void kfree(void *ptr) {
 }
 
 
-void kmalloc_test(void) {
-    printf("=== kmalloc/kfree test start ===\n");
+// void kmalloc_test(void) {
+//     printf("=== kmalloc/kfree test start ===\n");
 
-    // 1) 简单小块分配
-    void *p1 = kmalloc(24);
-    printf("Allocated p1 (24 bytes): 0x%x\n", p1);
-    if (!p1) {
-        printf("  [ERROR] kmalloc returned NULL\n");
-        return;
-    }
-    // 写入并验证数据完整性
-    memset(p1, 0xAA, 24);
-    for (size_t i = 0; i < 24; i++) {
-        if (((uint8_t*)p1)[i] != 0xAA) {
-            printf("  [ERROR] data corruption at p1[%d]\n", (unsigned)i);
-            break;
-        }
-    }
+//     // 1) 简单小块分配
+//     void *p1 = kmalloc(24);
+//     printf("Allocated p1 (24 bytes): 0x%x\n", p1);
+//     if (!p1) {
+//         printf("  [ERROR] kmalloc returned NULL\n");
+//         return;
+//     }
+//     // 写入并验证数据完整性
+//     memset(p1, 0xAA, 24);
+//     for (size_t i = 0; i < 24; i++) {
+//         if (((uint8_t*)p1)[i] != 0xAA) {
+//             printf("  [ERROR] data corruption at p1[%d]\n", (unsigned)i);
+//             break;
+//         }
+//     }
 
-    // 2) 再申请一个中等大小块
-    void *p2 = kmalloc(40);
-    printf("Allocated p2 (40 bytes): 0x%x\n", p2);
+//     // 2) 再申请一个中等大小块
+//     void *p2 = kmalloc(40);
+//     printf("Allocated p2 (40 bytes): 0x%x\n", p2);
 
-    // 3) 释放 p1，测试下次分配能否重用
-    kfree(p1);
-    printf("Freed p1\n");
+//     // 3) 释放 p1，测试下次分配能否重用
+//     kfree(p1);
+//     printf("Freed p1\n");
 
-    void *p3 = kmalloc(16);
-    printf("Allocated p3 (16 bytes): 0x%x  (expected == p1)\n", p3);
+//     void *p3 = kmalloc(16);
+//     printf("Allocated p3 (16 bytes): 0x%x  (expected == p1)\n", p3);
 
-    // 4) 释放剩余
-    kfree(p2);
-    printf("Freed p2\n");
-    kfree(p3);
-    printf("Freed p3\n");
+//     // 4) 释放剩余
+//     kfree(p2);
+//     printf("Freed p2\n");
+//     kfree(p3);
+//     printf("Freed p3\n");
 
-    // 5) 大块分配：测试堆扩展逻辑
-    size_t big_size = PAGE_SIZE * 2 + 100;
-    void *p4 = kmalloc(big_size);
-    printf("Allocated p4 (%u bytes): 0x%x\n", big_size, p4);
-    if (!p4) {
-        printf("  [ERROR] large kmalloc returned NULL\n");
-    } else {
-        // 可选：向首尾写入，保证这块新页可用
-        memset(p4, 0x55, 1);
-        memset((uint8_t*)p4 + big_size - 1, 0x55, 1);
-    }
-    kfree(p4);
-    printf("Freed p4\n");
+//     // 5) 大块分配：测试堆扩展逻辑
+//     size_t big_size = PAGE_SIZE * 2 + 100;
+//     void *p4 = kmalloc(big_size);
+//     printf("Allocated p4 (%u bytes): 0x%x\n", big_size, p4);
+//     if (!p4) {
+//         printf("  [ERROR] large kmalloc returned NULL\n");
+//     } else {
+//         // 可选：向首尾写入，保证这块新页可用
+//         memset(p4, 0x55, 1);
+//         memset((uint8_t*)p4 + big_size - 1, 0x55, 1);
+//     }
+//     kfree(p4);
+//     printf("Freed p4\n");
 
-    printf("=== kmalloc/kfree test complete ===\n");
-}
+//     printf("=== kmalloc/kfree test complete ===\n");
+// }

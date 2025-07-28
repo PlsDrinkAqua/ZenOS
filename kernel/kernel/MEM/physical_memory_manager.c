@@ -67,11 +67,15 @@ void pmm_init(multiboot_info_t* mbd, uint32_t magic)
 
     // 3) 把内核自身占用的页又标回“占用”
     extern uint8_t _kernel_start, _kernel_end;
-    uint32_t kstart = (uint32_t)&_kernel_start / PAGE_SIZE;
-    uint32_t kend   = ((uint32_t)&_kernel_end + PAGE_SIZE - 1) / PAGE_SIZE;
+    uint32_t phys_start = (uint32_t)&_kernel_start;
+    uint32_t phys_end   = (uint32_t)&_kernel_end   - ADDR_OFFSET;
+    uint32_t kstart = phys_start / PAGE_SIZE;
+    uint32_t kend   = (phys_end   + PAGE_SIZE - 1) / PAGE_SIZE;
+    printf("Kernel phys start 0x%x, phys end 0x%x\n", phys_start, phys_end);
     for(uint32_t f = kstart; f < kend; f++) {
         bitmap_set(f);
     }
+
 
     uint32_t zero_addr = pmm_alloc_frame();
     if(zero_addr){
@@ -110,25 +114,25 @@ void pmm_free_frame(uint32_t physaddr)
     if(frame < last_alloc) last_alloc = frame;
 }
 
-void pmm_test_frame(uint32_t physaddr)
-{
-    // 1) 对齐到页起始
-    uint32_t page_addr = ALIGN_DOWN(physaddr, PAGE_SIZE);
-    // 2) 计算对应的 frame 索引
-    uint32_t frame = page_addr / PAGE_SIZE;
+// void pmm_test_frame(uint32_t physaddr)
+// {
+//     // 1) 对齐到页起始
+//     uint32_t page_addr = ALIGN_DOWN(physaddr, PAGE_SIZE);
+//     // 2) 计算对应的 frame 索引
+//     uint32_t frame = page_addr / PAGE_SIZE;
 
-    // 3) 越界检查
-    if (frame >= MAX_FRAMES) {
-        printf("pmm_test_frame: address 0x%x out of managed range\n", physaddr);
-        return;
-    }
+//     // 3) 越界检查
+//     if (frame >= MAX_FRAMES) {
+//         printf("pmm_test_frame: address 0x%x out of managed range\n", physaddr);
+//         return;
+//     }
 
-    // 4) 查询位图
-    if (bitmap_test(frame)) {
-        printf("Frame at phys 0x%x [%u] is **allocated**\n",
-               page_addr, frame);
-    } else {
-        printf("Frame at phys 0x%x [%u] is **available**\n",
-               page_addr, frame);
-    }
-}
+//     // 4) 查询位图
+//     if (bitmap_test(frame)) {
+//         printf("Frame at phys 0x%x [%u] is **allocated**\n",
+//                page_addr, frame);
+//     } else {
+//         printf("Frame at phys 0x%x [%u] is **available**\n",
+//                page_addr, frame);
+//     }
+// }
