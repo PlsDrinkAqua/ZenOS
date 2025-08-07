@@ -71,7 +71,7 @@ void pmm_init(multiboot_info_t* mbd, uint32_t magic)
     uint32_t phys_end   = (uint32_t)&_kernel_end   - ADDR_OFFSET;
     uint32_t kstart = phys_start / PAGE_SIZE;
     uint32_t kend   = (phys_end   + PAGE_SIZE - 1) / PAGE_SIZE;
-    printf("Kernel phys start 0x%x, phys end 0x%x\n", phys_start, phys_end);
+    // printf("Kernel phys start 0x%x, phys end 0x%x\n", phys_start, phys_end);
     for(uint32_t f = kstart; f < kend; f++) {
         bitmap_set(f);
     }

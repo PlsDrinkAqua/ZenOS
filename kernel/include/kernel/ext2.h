@@ -97,6 +97,16 @@ struct ext2_inode {
 }__attribute__((packed));
 
 
-void ext2_init();
+// 返回指向只读 sb 的指针
+const struct ext2_super_block *ext2_sb(void);
+
+// 返回指向 descriptor table 首元素的指针
+const struct ext2_group_desc *ext2_gbdt(void);
+
+int ext2_read_inode(uint32_t inode_no, struct ext2_inode *inode_out);
+
+int ext2_driver_init();
+
+int ext2_read_block(uint32_t block_no, void *buf);
 
 #endif

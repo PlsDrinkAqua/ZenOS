@@ -10,6 +10,7 @@
 #define SECTOR_SIZE 512U
 #define SUPER_SECTOR 2        // Superblock 从 LBA=2 开始
 #define SUPER_READ_SECS 2     // 共 2 扇区 = 1024B
+#define INODE_SIZE 128
 
 /* 本文件私有 */
 static struct ext2_super_block sb;
@@ -77,15 +78,15 @@ int ext2_read_inode(uint32_t inode_no, struct ext2_inode *inode_out)
     }
 
     /* 拷贝 inode_size 字节 */
-    memcpy(inode_out, tmp + off_in_sec, inode_size);
+    memcpy(inode_out, tmp + off_in_sec, INODE_SIZE);
     kfree(tmp);
     return 0;
 }
 
 
-void ext2_init(void) {
+int ext2_driver_init(void) {
     if (!read_sb())
-        return;
+        return -1;
 
     /* 1) 计算 Block Group 数量 */
     {
@@ -99,7 +100,7 @@ void ext2_init(void) {
     gbdt = kmalloc(sb_groups_count * sizeof(*gbdt));
     if (!gbdt) {
         printf("ext2_init: kmalloc for gbdt failed\n");
-        return;
+        return -1;
     }
     {
         uint32_t block_size      = 1024U << sb.s_log_block_size;
@@ -113,16 +114,16 @@ void ext2_init(void) {
     }
 
     /* 3) 打印一些信息 */
-    printf("Total Blocks:        %u\n", sb.s_blocks_count);
-    printf("Free Blocks:         %u\n", sb.s_free_blocks_count);
-    printf("Group 0 Free Blocks: %u\n", gbdt[0].bg_free_blocks_count);
-    printf("Ext2 version: %u.%u\n",
-           sb.s_rev_level, sb.s_minor_rev_level);
-    if (sb.s_rev_level >= 1) {
-        printf("Supports extended superblock fields\n");
-    } else {
-        printf("Old revision (no extended fields)\n");
-    }
+    // printf("Total Blocks:        %u\n", sb.s_blocks_count);
+    // printf("Free Blocks:         %u\n", sb.s_free_blocks_count);
+    // printf("Group 0 Free Blocks: %u\n", gbdt[0].bg_free_blocks_count);
+    // printf("Ext2 version: %u.%u\n",
+    //        sb.s_rev_level, sb.s_minor_rev_level);
+    // if (sb.s_rev_level >= 1) {
+    //     printf("Supports extended superblock fields\n");
+    // } else {
+    //     printf("Old revision (no extended fields)\n");
+    // }
 
     /* 4) 读 root inode 并打印它的大小 */
     {
@@ -131,21 +132,51 @@ void ext2_init(void) {
         struct ext2_inode *root_inode = kmalloc(isz);
         if (!root_inode) {
             printf("ext2_init: kmalloc inode buf failed\n");
-            return;
+            return -1;
         }
         if (ext2_read_inode(ROOT_INO, root_inode) < 0) {
             printf("ext2_init: read root inode failed\n");
             kfree(root_inode);
-            return;
+            return -1;
         }
 
-        uint64_t size = (sb.s_rev_level >= 1)
-            ? ((uint64_t)root_inode->i_size_hi << 32)
-              | root_inode->i_size_lo
-            : root_inode->i_size_lo;
-        printf("Root inode size: %u bytes\n",
-               (unsigned long long)size);
+        // uint64_t size = (sb.s_rev_level >= 1)
+        //     ? ((uint64_t)root_inode->i_size_hi << 32)
+        //       | root_inode->i_size_lo
+        //     : root_inode->i_size_lo;
+        // printf("Root inode size: %u bytes\n",
+        //        (unsigned long long)size);
 
         kfree(root_inode);
     }
+    return 0;
+}
+
+const struct ext2_super_block *ext2_sb(void) {
+  return &sb;
+}
+const struct ext2_group_desc *ext2_gbdt(void) {
+  return gbdt;
+}
+
+
+// 计算每块包含多少扇区
+static inline uint32_t ext2_sectors_per_block(void) {
+    // sb 已经是模块私有的 static struct ext2_super_block
+    return (1024U << sb.s_log_block_size) / SECTOR_SIZE;
+}
+
+/**
+ * 读取整个数据块到 buf。
+ * @param block_no  要读的块号（基于 0 的块索引）
+ * @param buf       目标缓冲区，大小至少为 block_size
+ * @return 0 成功，-1 失败
+ */
+int ext2_read_block(uint32_t block_no, void *buf) {
+    uint32_t secs = ext2_sectors_per_block();
+    uint32_t start_sec = block_no * secs;
+    // ata_read_sectors 返回实际读到的扇区数
+    if (ata_read_sectors(start_sec, secs, buf) != secs)
+        return -1;
+    return 0;
 }

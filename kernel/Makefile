@@ -45,7 +45,8 @@ kernel/MEM/virtual_memory_manager.o \
 kernel/MEM/kernel_heap_allocator.o \
 kernel/MEM/kmalloc.o \
 kernel/FILESYSTEM/ata.o \
-kernel/FILESYSTEM/ext2.o
+kernel/FILESYSTEM/ext2.o \
+kernel/FILESYSTEM/ext2_api.o
 
 
 OBJS=\

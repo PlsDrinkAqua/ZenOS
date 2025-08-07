@@ -13,6 +13,7 @@
 #include <kernel/kmalloc.h>
 #include <kernel/ata.h>
 #include <kernel/ext2.h>
+#include <kernel/ext2_api.h>
 
 int debug = 4;
 
@@ -36,7 +37,7 @@ void kernel_main(multiboot_info_t* mbd, uint32_t magic) {
 	pmm_init(mbd , magic);
 	printf("done \n");
 
-	printf("Initilizing Virtual Memory Manager.................\n");
+	printf("Initilizing Virtual Memory Manager.................");
 	vmm_init();
 	printf("done \n");
 
@@ -52,12 +53,13 @@ void kernel_main(multiboot_info_t* mbd, uint32_t magic) {
 	printf("done \n");
 
 
-	printf("Initilizing ATA PIO Driver.................");
-	block_devices_init();
-	printf("done \n");
+	// printf("Initilizing ATA PIO Driver.................");
+	// block_devices_init();
+	// printf("done \n");
 
 	printf("Initilizing EXT2 File System.................");
 	ext2_init();
+	ext2_selftest();
 	printf("done \n");
 
 

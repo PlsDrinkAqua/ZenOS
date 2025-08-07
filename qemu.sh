@@ -1,6 +1,6 @@
 #!/bin/sh
 set -e
-. ./disk.sh
+. ./disk_test.sh
 . ./iso.sh
 
 # qemu-system-$(./target-triplet-to-arch.sh $HOST) -s -S -cdrom myos.iso \

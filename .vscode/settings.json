@@ -3,6 +3,7 @@
         "compare": "cpp",
         "pic.h": "c",
         "multiboot.h": "c",
-        "stdarg.h": "c"
+        "stdarg.h": "c",
+        "string.h": "c"
     }
 }
