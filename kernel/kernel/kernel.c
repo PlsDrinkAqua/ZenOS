@@ -15,6 +15,8 @@
 #include <kernel/ext2.h>
 #include <kernel/ext2_api.h>
 
+extern void jump_usermode(void);
+
 int debug = 4;
 
 void kernel_main(multiboot_info_t* mbd, uint32_t magic) {
@@ -68,8 +70,13 @@ void kernel_main(multiboot_info_t* mbd, uint32_t magic) {
 	__asm__ volatile ("sti");
 	// asm volatile ("1: jmp 1b");
 	printf("done \n");
-	printf("Hello, kernel World!\n");
-	while(1){
+	// printf("Hello, kernel World!\n");
+    printf("About to enter user mode...\n");
 
-	}
+    jump_usermode();
+
+    printf("ERROR: returned from user mode switch!\n");
+    while (1) {
+        __asm__ volatile ("hlt");
+    }
 }

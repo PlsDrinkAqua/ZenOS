@@ -46,7 +46,10 @@ kernel/MEM/kernel_heap_allocator.o \
 kernel/MEM/kmalloc.o \
 kernel/FILESYSTEM/ata.o \
 kernel/FILESYSTEM/ext2.o \
-kernel/FILESYSTEM/ext2_api.o
+kernel/FILESYSTEM/ext2_api.o\
+kernel/TSS/tss.o\
+kernel/USERMODE/test_user_name.o\
+kernel/USERMODE/usermode.o
 
 
 OBJS=\

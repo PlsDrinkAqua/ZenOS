@@ -1,5 +1,6 @@
 #include <kernel/gdt.h>
-#define NUM_ENTRIES 3
+#include <kernel/tss.h>
+#define NUM_ENTRIES 6
 
 /* A GDT entry is 8 bytes long. We pack the structure to prevent any unwanted padding. */
 struct gdt_entry {
@@ -54,20 +55,33 @@ void gdt_install(void)
     /* Our NULL descriptor */
     gdt_set_gate(0, 0, 0, 0, 0);
 
-    /* Code Segment Descriptor:
+    /* Kernel Code Segment Descriptor:
      * Base = 0, Limit = 4GB, Access = 0x9A (code segment, executable, readable, accessed),
      * Granularity = 0xCF (4K granularity, 32-bit op size).
      */
     gdt_set_gate(1, 0, 0xFFFFFFFF, 0x9A, 0xCF);
 
-    /* Data Segment Descriptor:
+    /* Kernal Data Segment Descriptor:
      * Base = 0, Limit = 4GB, Access = 0x92 (data segment, writable, accessed),
      * Granularity = 0xCF.
      */
     gdt_set_gate(2, 0, 0xFFFFFFFF, 0x92, 0xCF);
 
+    // user code
+    gdt_set_gate(3, 0, 0xFFFFFFFF, 0xFA, 0xCF);
+
+    // user data
+    gdt_set_gate(4, 0, 0xFFFFFFFF, 0xF2, 0xCF);
+
+    /*
+     * 5: TSS
+     * 这里先不直接手填，交给 tss_install()
+     */
+    tss_install(5, 0x10, 0x0);   /* 先给个占位 stack，后面再更新 */
+
     /* Flush out the old GDT and install the new changes */
     gdt_flush();
+    tss_flush();
 }
 
 void gdt_flush(void)

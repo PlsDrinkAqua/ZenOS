@@ -4,6 +4,7 @@
         "pic.h": "c",
         "multiboot.h": "c",
         "stdarg.h": "c",
-        "string.h": "c"
+        "string.h": "c",
+        "stdint.h": "c"
     }
 }
