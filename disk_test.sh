@@ -3,6 +3,10 @@ set -e
 
 IMG=ext2_hda.img
 MNT=/mnt/ext2_test
+USERPROG=./user/userprog
+
+. ./config.sh
+make -C user
 
 # 1. 先创建一个基础镜像
 dd if=/dev/zero of="$IMG" bs=1M count=100        # 100 MiB 空盘
@@ -17,6 +21,8 @@ echo "hello, ZenOS" | sudo tee "$MNT/hello.txt" > /dev/null
 sudo mkdir -p "$MNT/subdir"
 echo "foo" | sudo tee "$MNT/subdir/bar.dat" > /dev/null
 
+sudo cp "$USERPROG" "$MNT/userprog"
+
 # 确保写入磁盘
 sync
 
@@ -28,3 +34,5 @@ sudo rmdir "$MNT"
 cp "./$IMG" disk/"$IMG"
 
 echo "Generation completed: $IMG with test files created"
+
+

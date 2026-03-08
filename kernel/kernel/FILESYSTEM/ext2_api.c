@@ -160,7 +160,7 @@ int ext2_open(const char *path) {
  * 从 fd 对应的文件当前位置读取最多 count 字节到 buf，
  * 返回实际读到的字节数（可能 < count），出错返回 -1
  */
-size_t ext2_read(int fd, void *buf, size_t count) {
+int ext2_read(int fd, void *buf, size_t count) {
     if (fd < 0 || fd >= MAX_FD || !file_table[fd].used)
         return -1;
 
@@ -201,6 +201,12 @@ size_t ext2_read(int fd, void *buf, size_t count) {
 
     kfree(tmp);
     return total_r;
+}
+
+size_t ext2_filesize(int fd) {
+    if (fd < 0 || fd >= MAX_FD || !file_table[fd].used)
+        return 0;
+    return (size_t)file_table[fd].size;
 }
 
 /**

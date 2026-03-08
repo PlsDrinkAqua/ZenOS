@@ -60,7 +60,7 @@ void ata_init(void) {
 
 // Read multiple sectors; returns number of sectors read
 uint32_t ata_read_sectors(uint32_t lba, uint8_t count, uint8_t *buffer) {
-    uint8_t sectors = count ? count : 256;
+    uint32_t sectors = count ? count : 256;
     // Ensure device ready
     ata_wait_ready();
     // Select master + high LBA bits
