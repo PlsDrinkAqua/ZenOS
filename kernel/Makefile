@@ -49,7 +49,8 @@ kernel/FILESYSTEM/ext2.o \
 kernel/FILESYSTEM/ext2_api.o\
 kernel/TSS/tss.o\
 kernel/USERMODE/test_user_name.o\
-kernel/USERMODE/usermode.o
+kernel/USERMODE/usermode.o\
+kernel/MEM/user_heap_allocator.o
 
 
 OBJS=\

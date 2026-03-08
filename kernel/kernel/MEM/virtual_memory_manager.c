@@ -22,6 +22,10 @@ static page_table_t *ref_tables[PAGE_DIR_ENTRIES];
 
 page_directory_t *current_pd;
 
+static inline void vmm_invlpg(uintptr_t vaddr) {
+    asm volatile("invlpg (%0)" : : "r"(vaddr) : "memory");
+}
+
 
 void vmm_init(void) {
     // 1) 指向那个纯 PDE 数组
@@ -47,24 +51,66 @@ int vmm_map_page(uintptr_t vaddr, uintptr_t paddr, uint32_t flags) {
     uint32_t pd_idx = (vaddr >> 22) & 0x3FF;
     uint32_t pt_idx = (vaddr >> 12) & 0x3FF;
 
-    // 如果页表还没分配
-    if (!current_pd->entries[pd_idx].present) {
-        uint32_t phys = pmm_alloc_frame();
-        if (!phys) return -1;
-        page_table_t *pt = (page_table_t*)(phys + KERNEL_VIRT_OFFSET);
+    page_directory_entry_t *pde = &current_pd->entries[pd_idx];
+    page_table_t *pt = ref_tables[pd_idx];
+
+    bool want_user = (flags & VMM_USER) != 0;
+
+    // 如果页表不存在，就新建一个
+    if (!pde->present) {
+        uint32_t pt_phys = pmm_alloc_frame();
+        if (!pt_phys) {
+            return -1;
+        }
+
+        pt = (page_table_t *)(pt_phys + KERNEL_VIRT_OFFSET);
         memset(pt, 0, sizeof(*pt));
-        current_pd->entries[pd_idx].frame   = phys >> 12;
-        current_pd->entries[pd_idx].present = 1;
-        current_pd->entries[pd_idx].rw      = 1;
-        ref_tables[pd_idx]                  = pt;
+
+        pde->frame     = pt_phys >> 12;
+        pde->present   = 1;
+        pde->rw        = (flags & VMM_RW) ? 1 : 0;
+        pde->user      = want_user ? 1 : 0;
+        pde->page_size = 0;
+
+        ref_tables[pd_idx] = pt;
+    } else {
+        // PDE 已存在时，不允许跨权限域复用
+        if (want_user && !pde->user) {
+            // 想在 kernel PDE 里映射 user page
+            return -1;
+        }
+
+        if (!want_user && pde->user) {
+            // 想在 user PDE 里映射 kernel-only page
+            return -1;
+        }
+
+        // 一般保持可写，简单点
+        if (flags & VMM_RW) {
+            pde->rw = 1;
+        }
+
+        pt = ref_tables[pd_idx];
+        if (!pt) {
+            uint32_t pt_phys = pde->frame << 12;
+            pt = (page_table_t *)(pt_phys + KERNEL_VIRT_OFFSET);
+            ref_tables[pd_idx] = pt;
+        }
     }
 
-    page_table_t *pt = ref_tables[pd_idx];
-    pt->pages[pt_idx].frame   = paddr >> 12;
-    pt->pages[pt_idx].present = 1;
-    pt->pages[pt_idx].rw      = (flags & VMM_RW) ? 1 : 0;
+    page_table_entry_t *pte = &pt->pages[pt_idx];
 
-    asm volatile("invlpg (%0)" : : "r"(vaddr) : "memory");
+    // 如果你不想允许覆盖已有映射，可以打开这段：
+    if (pte->present) {
+        return -1;
+    }
+
+    pte->frame   = paddr >> 12;
+    pte->present = 1;
+    pte->rw      = (flags & VMM_RW) ? 1 : 0;
+    pte->user    = want_user ? 1 : 0;
+
+    vmm_invlpg(vaddr);
     return 0;
 }
 

@@ -11,6 +11,7 @@
 #include <kernel/vmm.h>
 #include <kernel/kha.h>
 #include <kernel/kmalloc.h>
+#include <kernel/user_heap.h>
 #include <kernel/ata.h>
 #include <kernel/ext2.h>
 #include <kernel/ext2_api.h>
@@ -62,6 +63,10 @@ void kernel_main(multiboot_info_t* mbd, uint32_t magic) {
 	printf("Initilizing EXT2 File System.................");
 	ext2_init();
 	ext2_selftest();
+	printf("done \n");
+
+	printf("Initilizing User Heap Allocator.................");
+	user_heap_init();
 	printf("done \n");
 
 
