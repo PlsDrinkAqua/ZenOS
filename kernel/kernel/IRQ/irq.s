@@ -29,7 +29,6 @@ _irq1:
 ;     pushl $0       # Dummy error code
 ;     pushl $0x2F    # Interrupt vector 47 (IRQ15 remapped to 0x28+7)
 ;     jmp irq_common_stub
-
 .global _isr14
 .align   4
 _isr14:

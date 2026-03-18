@@ -31,6 +31,7 @@ static inline void idt_flush(void)
 extern void _irq0(void);
 extern void _irq1(void);
 extern void _isr14(void);
+extern void isr128(void);
 // extern void _irq14(void);
 // extern void _irq15(void);
 
@@ -61,6 +62,7 @@ void idt_install(void)
     /* Set the keyboard ISR (IRQ1 remapped to vector 0x21) */
     idt_set_gate(0x20, (uint32_t)_irq0, 0x08, 0x8E);
     idt_set_gate(0x21, (uint32_t)_irq1, 0x08, 0x8E);
+    idt_set_gate(0x80, (uint32_t)isr128, 0x08, 0xEE);
 
     // idt_set_gate(ATA_IRQ_MASTER, (uint32_t)_irq14, 0x08, 0x8E);
     // idt_set_gate(ATA_IRQ_SECOND, (uint32_t)_irq15, 0x08, 0x8E);

@@ -18,7 +18,6 @@ typedef struct registers {
     uint32_t dummy_error; // Manually pushed dummy error code (e.g., 0)
 } registers_t;
 
-
 void interrupt_handler(registers_t *regs)
 {
     switch(regs->int_num) {

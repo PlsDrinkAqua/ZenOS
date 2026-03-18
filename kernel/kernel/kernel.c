@@ -16,12 +16,14 @@
 #include <kernel/ext2.h>
 #include <kernel/ext2_api.h>
 #include <kernel/elf.h>
+#include <kernel/tss.h>
 
 #define USER_STACK_TOP 0xBFFFE000
 #define VMM_PRESENT  (1<<0)
 #define VMM_RW       (1<<1)
 #define VMM_USER     (1<<2)
 extern void jump_usermode(uint32_t entry, uint32_t user_stack_top);
+extern uint8_t stack_top;
 
 int debug = 4;
 
@@ -91,6 +93,9 @@ void kernel_main(multiboot_info_t* mbd, uint32_t magic) {
 	printf("done \n");
     printf("About to enter user mode...\n");
 	printf("entry: 0x%x, stack: 0x%x",res.entry,USER_STACK_TOP);
+
+	uint32_t kernel_stack_top = (uint32_t)&stack_top;
+	tss_set_kernel_stack(kernel_stack_top);
 
 	jump_usermode(res.entry, USER_STACK_TOP);
 

@@ -31,6 +31,7 @@ sudo umount "$MNT"
 sudo rmdir "$MNT"
 
 # 3. 复制到 disk 目录
+mkdir -p disk
 cp "./$IMG" disk/"$IMG"
 
 echo "Generation completed: $IMG with test files created"
