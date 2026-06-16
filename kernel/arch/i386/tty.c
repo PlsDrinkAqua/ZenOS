@@ -59,6 +59,11 @@ void terminal_putchar(char c) {
         // Move to the next line and reset column.
         terminal_column = 0;
         terminal_row++;
+    } else if (c == '\b') {
+        if (terminal_column > 0) {
+            terminal_column--;
+            terminal_putentryat(' ', terminal_color, terminal_column, terminal_row);
+        }
     } else {
         terminal_putentryat(c, terminal_color, terminal_column, terminal_row);
         terminal_column++;
