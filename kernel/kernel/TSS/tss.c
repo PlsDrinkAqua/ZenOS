@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include <string.h>
+#include <libk/string.h>
 
 #include <kernel/tss.h>
 #include <kernel/gdt.h>
@@ -40,7 +40,7 @@ void tss_install(int num, uint16_t kernel_ss, uint32_t kernel_esp)
     uint32_t limit = sizeof(struct tss_entry) - 1;
 
     /* Zero the whole TSS first */
-    memset(&tss, 0, sizeof(struct tss_entry));
+    kmemset(&tss, 0, sizeof(struct tss_entry));
 
     /* Create TSS descriptor in GDT */
     gdt_set_gate(num, base, limit, 0x89, 0x00);

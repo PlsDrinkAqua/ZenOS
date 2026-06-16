@@ -1,7 +1,7 @@
-#include <stdio.h>
+#include <libk/stdio.h>
 #include <kernel/tty.h>
 __attribute__((constructor)) 
 void foo(void){
     // terminal_initialize();
-    // printf("Terminal Initilized\n");
+    // kprintf("Terminal Initilized\n");
 }

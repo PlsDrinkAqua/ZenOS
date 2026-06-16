@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include <stdio.h>
+#include <libk/stdio.h>
 #include "kernel/io.h"
 #include "kernel/pic.h"
 #include "kernel/kmalloc.h"
@@ -117,7 +117,7 @@ void ata_rw_selftest(void) {
     uint8_t *write_buf = kmalloc(buf_size);
     uint8_t *read_buf  = kmalloc(buf_size);
     if (!write_buf || !read_buf) {
-        printf("ATA selftest: kmalloc failed\n");
+        kprintf("ATA selftest: kmalloc failed\n");
         if (write_buf) kfree(write_buf);
         if (read_buf)  kfree(read_buf);
         return;
@@ -128,13 +128,13 @@ void ata_rw_selftest(void) {
     ata_read_sectors(start_lba, TEST_COUNT, read_buf);
     for (size_t i = 0; i < buf_size; i++) {
         if (read_buf[i] != write_buf[i]) {
-            printf("ATA R/W multi test FAILED at %zu: wrote=0x%02x read=0x%02x\n",
+            kprintf("ATA R/W multi test FAILED at %zu: wrote=0x%02x read=0x%02x\n",
                    i, write_buf[i], read_buf[i]);
             kfree(write_buf); kfree(read_buf);
             return;
         }
     }
-    printf("ATA R/W multi test PASSED LBA %u..%u\n",
+    kprintf("ATA R/W multi test PASSED LBA %u..%u\n",
            start_lba, start_lba + TEST_COUNT - 1);
     kfree(write_buf); kfree(read_buf);
 }

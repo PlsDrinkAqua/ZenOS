@@ -1,6 +1,6 @@
 #include <stdint.h>
-#include <string.h>
-#include <stdio.h>
+#include <libk/string.h>
+#include <libk/stdio.h>
 #include <stdbool.h>
 #include "kernel/vmm.h"       // alloc_frame/free_frame，如果今后需要动态分配页表
 #include "kernel/paging.h"
@@ -75,10 +75,10 @@ void vmm_heap_test(void) {
     // Allocate pages
     void *base = vmm_alloc_pages(npages, VMM_PRESENT | VMM_RW);
     if (!base) {
-        printf("[heap_test] vmm_alloc_pages failed\n");
+        kprintf("[heap_test] vmm_alloc_pages failed\n");
         return;
     }
-    printf("[heap_test] Allocated %u pages at virtual address %p\n", npages, base);
+    kprintf("[heap_test] Allocated %u pages at virtual address %p\n", npages, base);
 
     // Write test pattern: each page first byte = page index
     uint8_t *p = (uint8_t*)base;
@@ -90,22 +90,22 @@ void vmm_heap_test(void) {
     for (size_t i = 0; i < npages; i++) {
         uint8_t val = p[i * PAGE_SIZE];
         if (val != (uint8_t)i) {
-            printf("[heap_test] Memory mismatch at page %u: expected 0x%x, got 0x%x\n", i, (uint8_t)i, val);
+            kprintf("[heap_test] Memory mismatch at page %u: expected 0x%x, got 0x%x\n", i, (uint8_t)i, val);
             return;
         }
     }
-    printf("[heap_test] Read/write test PASS\n");
+    kprintf("[heap_test] Read/write test PASS\n");
 
     // Free pages
     vmm_free_pages(base, npages);
-    printf("[heap_test] Freed %u pages at virtual address %p\n", npages, base);
+    kprintf("[heap_test] Freed %u pages at virtual address %p\n", npages, base);
 
     // Verify unmapped: translation should return 0
     uintptr_t va = (uintptr_t)base;
     uint32_t trans = vmm_translate(va);
     if (trans != 0) {
-        printf("[heap_test] vmm_free_pages failed: translation still returns 0x%x\n", trans);
+        kprintf("[heap_test] vmm_free_pages failed: translation still returns 0x%x\n", trans);
     } else {
-        printf("[heap_test] vmm_free_pages PASS: pages unmapped successfully\n");
+        kprintf("[heap_test] vmm_free_pages PASS: pages unmapped successfully\n");
     }
 }

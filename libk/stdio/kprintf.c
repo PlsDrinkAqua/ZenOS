@@ -1,14 +1,14 @@
 #include <limits.h>
 #include <stdbool.h>
 #include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
+#include <libk/stdio.h>
+#include <libk/string.h>
 #include <stdint.h>
 
 static bool print(const char* data, size_t length) {
     const unsigned char* bytes = (const unsigned char*) data;
     for (size_t i = 0; i < length; i++)
-        if (putchar(bytes[i]) == EOF)
+        if (kputchar(bytes[i]) == KEOF)
             return false;
     return true;
 }
@@ -25,7 +25,7 @@ static char* utoa(unsigned long x, unsigned base, char* buf_end) {
     return p;
 }
 
-int printf(const char* restrict format, ...) {
+int kprintf(const char* restrict format, ...) {
     va_list parameters;
     va_start(parameters, format);
 
@@ -63,7 +63,7 @@ int printf(const char* restrict format, ...) {
         } else if (*format == 's') {
             format++;
             const char* str = va_arg(parameters, const char*);
-            size_t len = strlen(str);
+            size_t len = kstrlen(str);
             if (maxrem < len)
                 return -1;
             if (!print(str, len))
@@ -88,7 +88,7 @@ int printf(const char* restrict format, ...) {
                 val = (unsigned long)va_arg(parameters, unsigned int);
                 s = utoa(val, (*format == 'x') ? 16 : 10, numbuf + sizeof(numbuf));
             }
-            size_t len = strlen(s) + (negative ? 1 : 0);
+            size_t len = kstrlen(s) + (negative ? 1 : 0);
             if (maxrem < len) {
                 return -1;
             }
@@ -97,14 +97,14 @@ int printf(const char* restrict format, ...) {
                     return -1;
                 written++;
             }
-            if (!print(s, strlen(s)))
+            if (!print(s, kstrlen(s)))
                 return -1;
             written += len;
             format++;
         } else {
             // Unknown specifier: print it literally
             format = format_begun_at;
-            size_t len = strlen(format);
+            size_t len = kstrlen(format);
             if (maxrem < len)
                 return -1;
             if (!print(format, len))

@@ -1,6 +1,6 @@
 #include <stdint.h>
-#include <string.h>
-#include <stdio.h>
+#include <libk/string.h>
+#include <libk/stdio.h>
 #include <stdbool.h>
 #include "kernel/vmm.h"       // alloc_frame/free_frame，如果今后需要动态分配页表
 #include "kernel/paging.h"
@@ -64,7 +64,7 @@ int vmm_map_page(uintptr_t vaddr, uintptr_t paddr, uint32_t flags) {
         }
 
         pt = (page_table_t *)(pt_phys + KERNEL_VIRT_OFFSET);
-        memset(pt, 0, sizeof(*pt));
+        kmemset(pt, 0, sizeof(*pt));
 
         pde->frame     = pt_phys >> 12;
         pde->present   = 1;
@@ -202,10 +202,10 @@ int vmm_unmap_region(uintptr_t vstart,
 //     // 1) 申请一个物理页
 //     uint32_t phys_test = pmm_alloc_frame();
 //     if (!phys_test) {
-//         printf("vmm_test: pmm_alloc_frame failed\n");
+//         kprintf("vmm_test: pmm_alloc_frame failed\n");
 //         return;
 //     }
-//     printf("Physical page allocated at 0x%x\n", phys_test);
+//     kprintf("Physical page allocated at 0x%x\n", phys_test);
 
 //     // 2) 计算测试用的虚拟页——在 kernel_end 后对齐到下一页
 //     uint32_t kernel_end_va = (uint32_t)&_kernel_end ;
@@ -214,21 +214,21 @@ int vmm_unmap_region(uintptr_t vstart,
 //     // 再下一页
 //     uint32_t virt_test = aligned_end + PAGE_SIZE;
 
-//     printf("Chosen virtual address: 0x%x\n", virt_test);
+//     kprintf("Chosen virtual address: 0x%x\n", virt_test);
 
 //     // 3) 做映射
 //     int ret = vmm_map_page(virt_test, phys_test, VMM_PRESENT|VMM_RW);
 //     if (ret < 0) {
-//         printf("vmm_map_page failed\n");
+//         kprintf("vmm_map_page failed\n");
 //         return;
 //     }
-//     printf("Mapped VA 0x%x -> PA 0x%x\n", virt_test, phys_test);
+//     kprintf("Mapped VA 0x%x -> PA 0x%x\n", virt_test, phys_test);
 
 //     // 4) 验证翻译
 //     uint32_t trans = vmm_translate(virt_test);
-//     printf("vmm_translate(0x%x) = 0x%x\n", virt_test, trans);
+//     kprintf("vmm_translate(0x%x) = 0x%x\n", virt_test, trans);
 //     if (trans != phys_test) {
-//         printf("Translation mismatch!\n");
+//         kprintf("Translation mismatch!\n");
 //         return;
 //     }
 
@@ -236,15 +236,15 @@ int vmm_unmap_region(uintptr_t vstart,
 //     uint32_t *p = (uint32_t*)virt_test;
 //     *p = 0xDEADBEEF;
 //     uint32_t v = *p;
-//     printf("Wrote 0xDEADBEEF, read back 0x%x -> %s\n",
+//     kprintf("Wrote 0xDEADBEEF, read back 0x%x -> %s\n",
 //            v, (v == 0xDEADBEEF) ? "PASS" : "FAIL");
     
 //     // 取消映射 virt_test，并把物理页一起还给 PMM
 //     pmm_test_frame(phys_test);
 //     if (vmm_unmap_page(virt_test, true) == 0) {
-//         printf("Unmapped VA 0x%x and freed its frame\n", virt_test);
+//         kprintf("Unmapped VA 0x%x and freed its frame\n", virt_test);
 //     } else {
-//         printf("VA 0x%x was not mapped\n", virt_test);
+//         kprintf("VA 0x%x was not mapped\n", virt_test);
 //     }
 
 // }
@@ -259,35 +259,35 @@ int vmm_unmap_region(uintptr_t vstart,
 //     uintptr_t vstart        = aligned_end + 2 * PAGE_SIZE;
 //     uintptr_t vend          = vstart + num_pages * PAGE_SIZE;
 
-//     printf("vmm_test_region: mapping VA 0x%x -> 0x%x (%d pages)\n",
+//     kprintf("vmm_test_region: mapping VA 0x%x -> 0x%x (%d pages)\n",
 //            vstart, vend, num_pages);
 
 //     // 2) 批量映射：让每个虚拟页分配一个新的物理页
 //     if (vmm_map_region(vstart, vend, 0, VMM_PRESENT | VMM_RW) < 0) {
-//         printf("vmm_map_region failed\n");
+//         kprintf("vmm_map_region failed\n");
 //         return;
 //     }
-//     printf("Region mapped.\n");
+//     kprintf("Region mapped.\n");
 
 //     // 3) 验证每页的翻译 & 读写测试
 //     for (int i = 0; i < num_pages; i++) {
 //         uintptr_t va = vstart + i * PAGE_SIZE;
 //         uint32_t pa  = vmm_translate(va);
-//         printf(" Page %d: VA=0x%x -> PA=0x%x\n", i, va, pa);
+//         kprintf(" Page %d: VA=0x%x -> PA=0x%x\n", i, va, pa);
 
 //         uint32_t *ptr = (uint32_t*)va;
 //         uint32_t pattern = 0xABCD0000 | i;
 //         *ptr = pattern;
 //         uint32_t val = *ptr;
-//         printf("  Wrote 0x%x, read 0x%x -> %s\n",
+//         kprintf("  Wrote 0x%x, read 0x%x -> %s\n",
 //                pattern, val, (val == pattern) ? "PASS" : "FAIL");
 //     }
 
 //     // 4) 批量取消映射并释放物理页
 //     if (vmm_unmap_region(vstart, vend, true) == 0) {
-//         printf("Region unmapped and frames freed.\n");
+//         kprintf("Region unmapped and frames freed.\n");
 //     } else {
-//         printf("vmm_unmap_region failed\n");
+//         kprintf("vmm_unmap_region failed\n");
 //         return;
 //     }
 
@@ -295,7 +295,7 @@ int vmm_unmap_region(uintptr_t vstart,
 //     for (int i = 0; i < num_pages; i++) {
 //         uintptr_t va = vstart + i * PAGE_SIZE;
 //         uint32_t pa = vmm_translate(va);
-//         printf(" Page %d: translate(0x%x) = 0x%x -> %s\n",
+//         kprintf(" Page %d: translate(0x%x) = 0x%x -> %s\n",
 //                i, va, pa, (pa == 0) ? "UNMAPPED" : "STILL MAPPED");
 //     }
 // }
@@ -316,15 +316,15 @@ void dump_boot_pte(uint32_t va) {
 
     // 1) 读 PDE
     page_directory_entry_t pde = boot_page_directory.entries[pdi];
-    printf("VA=0x%x  PDE[%u] = 0x%x\n", va, pdi, pde);
+    kprintf("VA=0x%x  PDE[%u] = 0x%x\n", va, pdi, pde);
     if (!pde.present) {
-        printf("PDE not mapped!\n");
+        kprintf("PDE not mapped!\n");
         return;
     }
 
     // 2) 我们只用 boot_page_table1 来映射第 0 段和高端内核段
     if (pdi != 0 && pdi != KERNEL_PD_INDEX) {
-        printf("PDE pointes to non boot_page_table1 (index %u),not supported!\n", pdi);
+        kprintf("PDE pointes to non boot_page_table1 (index %u),not supported!\n", pdi);
         return;
     }
 
@@ -333,15 +333,15 @@ void dump_boot_pte(uint32_t va) {
     // 转成内核虚拟地址（高端映射）
     uint32_t pt_virt = pt_phys + KERNEL_VIRT_OFFSET;
     uint32_t *pt     = (uint32_t *)pt_virt; // 指向 PTE[0]
-    printf("pt adress: 0x%x \n", pt);
-    printf("page table1: 0x%x \n", boot_page_table1);
+    kprintf("pt adress: 0x%x \n", pt);
+    kprintf("page table1: 0x%x \n", boot_page_table1);
 
     uint32_t pte = boot_page_table1[pti];
-    printf("PTE: 0x%x \n",pte);
+    kprintf("PTE: 0x%x \n",pte);
     if (pte & 1) {
-        printf("PTE Mapped !!!!!!!!!!!\n");
-        printf("  PTE[%u] = 0x%x\n", pdi, pte);
+        kprintf("PTE Mapped !!!!!!!!!!!\n");
+        kprintf("  PTE[%u] = 0x%x\n", pdi, pte);
         return;
     }
-    printf("PTE no MAPPED!\n");
+    kprintf("PTE no MAPPED!\n");
 }

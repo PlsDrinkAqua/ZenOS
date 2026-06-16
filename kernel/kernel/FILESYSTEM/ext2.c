@@ -1,6 +1,6 @@
 #include <stdint.h>
-#include <stdio.h>
-#include <string.h>
+#include <libk/stdio.h>
+#include <libk/string.h>
 
 #include "kernel/ata.h"
 #include "kernel/ext2.h"
@@ -20,13 +20,13 @@ static uint32_t sb_groups_count;
 static uint8_t read_sb(void) {
     static uint8_t buf[SECTOR_SIZE * SUPER_READ_SECS];
     if (!ata_read_sectors(SUPER_SECTOR, SUPER_READ_SECS, buf)) {
-        printf("ext2: read superblock failed\n");
+        kprintf("ext2: read superblock failed\n");
         return 0;
     }
-    memcpy(&sb, buf, sizeof(sb));
+    kmemcpy(&sb, buf, sizeof(sb));
 
     if (sb.s_magic != 0xEF53) {
-        printf("Not an ext2 filesystem! magic=0x%x\n", sb.s_magic);
+        kprintf("Not an ext2 filesystem! magic=0x%x\n", sb.s_magic);
         return 0;
     }
     return 1;
@@ -78,7 +78,7 @@ int ext2_read_inode(uint32_t inode_no, struct ext2_inode *inode_out)
     }
 
     /* 拷贝 inode_size 字节 */
-    memcpy(inode_out, tmp + off_in_sec, INODE_SIZE);
+    kmemcpy(inode_out, tmp + off_in_sec, INODE_SIZE);
     kfree(tmp);
     return 0;
 }
@@ -99,7 +99,7 @@ int ext2_driver_init(void) {
     /* 2) 读入 Group Descriptor Table */
     gbdt = kmalloc(sb_groups_count * sizeof(*gbdt));
     if (!gbdt) {
-        printf("ext2_init: kmalloc for gbdt failed\n");
+        kprintf("ext2_init: kmalloc for gbdt failed\n");
         return -1;
     }
     {
@@ -114,15 +114,15 @@ int ext2_driver_init(void) {
     }
 
     /* 3) 打印一些信息 */
-    // printf("Total Blocks:        %u\n", sb.s_blocks_count);
-    // printf("Free Blocks:         %u\n", sb.s_free_blocks_count);
-    // printf("Group 0 Free Blocks: %u\n", gbdt[0].bg_free_blocks_count);
-    // printf("Ext2 version: %u.%u\n",
+    // kprintf("Total Blocks:        %u\n", sb.s_blocks_count);
+    // kprintf("Free Blocks:         %u\n", sb.s_free_blocks_count);
+    // kprintf("Group 0 Free Blocks: %u\n", gbdt[0].bg_free_blocks_count);
+    // kprintf("Ext2 version: %u.%u\n",
     //        sb.s_rev_level, sb.s_minor_rev_level);
     // if (sb.s_rev_level >= 1) {
-    //     printf("Supports extended superblock fields\n");
+    //     kprintf("Supports extended superblock fields\n");
     // } else {
-    //     printf("Old revision (no extended fields)\n");
+    //     kprintf("Old revision (no extended fields)\n");
     // }
 
     /* 4) 读 root inode 并打印它的大小 */
@@ -131,11 +131,11 @@ int ext2_driver_init(void) {
         uint32_t isz = (sb.s_rev_level >= 1 ? sb.s_inode_size : 128);
         struct ext2_inode *root_inode = kmalloc(isz);
         if (!root_inode) {
-            printf("ext2_init: kmalloc inode buf failed\n");
+            kprintf("ext2_init: kmalloc inode buf failed\n");
             return -1;
         }
         if (ext2_read_inode(ROOT_INO, root_inode) < 0) {
-            printf("ext2_init: read root inode failed\n");
+            kprintf("ext2_init: read root inode failed\n");
             kfree(root_inode);
             return -1;
         }
@@ -144,7 +144,7 @@ int ext2_driver_init(void) {
         //     ? ((uint64_t)root_inode->i_size_hi << 32)
         //       | root_inode->i_size_lo
         //     : root_inode->i_size_lo;
-        // printf("Root inode size: %u bytes\n",
+        // kprintf("Root inode size: %u bytes\n",
         //        (unsigned long long)size);
 
         kfree(root_inode);

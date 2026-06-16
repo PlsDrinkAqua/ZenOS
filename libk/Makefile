@@ -1,5 +1,5 @@
 DEFAULT_HOST!=../default-host.sh
-HOST?=DEFAULT_HOST
+HOST?=$(DEFAULT_HOST)
 HOSTARCH!=../target-triplet-to-arch.sh $(HOST)
 
 CFLAGS?=-O2 -g
@@ -13,8 +13,8 @@ EXEC_PREFIX?=$(PREFIX)
 INCLUDEDIR?=$(PREFIX)/include
 LIBDIR?=$(EXEC_PREFIX)/lib
 
-CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra
-CPPFLAGS:=$(CPPFLAGS) -D__is_libc -Iinclude
+CFLAGS:=$(CFLAGS) -ffreestanding -fno-builtin -Wall -Wextra
+CPPFLAGS:=$(CPPFLAGS) -Iinclude
 LIBK_CFLAGS:=$(CFLAGS)
 LIBK_CPPFLAGS:=$(CPPFLAGS) -D__is_libk
 
@@ -29,18 +29,18 @@ LIBK_CPPFLAGS:=$(LIBK_CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
 
 FREEOBJS=\
 $(ARCH_FREEOBJS) \
-stdio/printf.o \
-stdio/putchar.o \
-stdio/puts.o \
-stdlib/abort.o \
-string/memcmp.o \
-string/memcpy.o \
-string/memmove.o \
-string/memset.o \
-string/strlen.o \
-string/strcmp.o \
-string/strcpy.o \
-string/strtok_r.o \
+stdio/kprintf.o \
+stdio/kputchar.o \
+stdio/kputs.o \
+stdlib/kabort.o \
+string/kmemcmp.o \
+string/kmemcpy.o \
+string/kmemmove.o \
+string/kmemset.o \
+string/kstrlen.o \
+string/kstrcmp.o \
+string/kstrcpy.o \
+string/kstrtok_r.o \
 
 HOSTEDOBJS=\
 $(ARCH_HOSTEDOBJS) \
@@ -51,16 +51,12 @@ $(HOSTEDOBJS) \
 
 LIBK_OBJS=$(FREEOBJS:.o=.libk.o)
 
-#BINARIES=libc.a libk.a # Not ready for libc yet.
 BINARIES=libk.a
 
 .PHONY: all clean install install-headers install-libs
 .SUFFIXES: .o .libk.o .c .S
 
 all: $(BINARIES)
-
-libc.a: $(OBJS)
-	$(AR) rcs $@ $(OBJS)
 
 libk.a: $(LIBK_OBJS)
 	$(AR) rcs $@ $(LIBK_OBJS)

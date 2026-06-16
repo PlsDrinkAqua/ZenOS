@@ -1,14 +1,14 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include <libk/stdio.h>
+#include <libk/stdlib.h>
 
 __attribute__((__noreturn__))
-void abort(void) {
+void kabort(void) {
 #if defined(__is_libk)
 	// TODO: Add proper kernel panic.
-	printf("kernel: panic: abort()\n");
+	kprintf("kernel: panic: kabort()\n");
 #else
 	// TODO: Abnormally terminate the process as if by SIGABRT.
-	printf("abort()\n");
+	kprintf("kabort()\n");
 #endif
 	while (1) { }
 	__builtin_unreachable();

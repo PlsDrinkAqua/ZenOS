@@ -1,8 +1,8 @@
 #include "kernel/multiboot.h"
 #include "kernel/pmm.h"
 #include <stdint.h>
-#include <stdio.h>
-#include <string.h>
+#include <libk/stdio.h>
+#include <libk/string.h>
 
 #define ADDR_OFFSET 0xC0000000U
 
@@ -28,11 +28,11 @@ void pmm_init(multiboot_info_t* mbd, uint32_t magic)
 {
 
     // 1) 全图置 1
-    memset(pmm_bitmap, 0xFF, BITMAP_BYTES);
+    kmemset(pmm_bitmap, 0xFF, BITMAP_BYTES);
 
     /* Make sure the magic number matches for memory mapping*/
     if(magic != MULTIBOOT_BOOTLOADER_MAGIC) {
-        printf("invalid magic number! \n");
+        kprintf("invalid magic number! \n");
     }
 
     // Convert the physical pointer to its high-half virtual address:
@@ -41,7 +41,7 @@ void pmm_init(multiboot_info_t* mbd, uint32_t magic)
 
     /* Check bit 6 to see if we have a valid memory map */
     if(!(mbd->flags >> 6 & 0x1)) {
-        printf("invalid memory map given by GRUB bootloader \n");
+        kprintf("invalid memory map given by GRUB bootloader \n");
     }
 
     // 2) 遍历 multiboot memory map，把 type=1 的页清空为“空闲”
@@ -71,7 +71,7 @@ void pmm_init(multiboot_info_t* mbd, uint32_t magic)
     uint32_t phys_end   = (uint32_t)&_kernel_end   - ADDR_OFFSET;
     uint32_t kstart = phys_start / PAGE_SIZE;
     uint32_t kend   = (phys_end   + PAGE_SIZE - 1) / PAGE_SIZE;
-    // printf("Kernel phys start 0x%x, phys end 0x%x\n", phys_start, phys_end);
+    // kprintf("Kernel phys start 0x%x, phys end 0x%x\n", phys_start, phys_end);
     for(uint32_t f = kstart; f < kend; f++) {
         bitmap_set(f);
     }
@@ -79,7 +79,7 @@ void pmm_init(multiboot_info_t* mbd, uint32_t magic)
 
     uint32_t zero_addr = pmm_alloc_frame();
     if(zero_addr){
-        printf("Physical memory manager initilizatio failed \n");
+        kprintf("Physical memory manager initilizatio failed \n");
         asm volatile ("1: jmp 1b");
     }
     
@@ -123,16 +123,16 @@ void pmm_free_frame(uint32_t physaddr)
 
 //     // 3) 越界检查
 //     if (frame >= MAX_FRAMES) {
-//         printf("pmm_test_frame: address 0x%x out of managed range\n", physaddr);
+//         kprintf("pmm_test_frame: address 0x%x out of managed range\n", physaddr);
 //         return;
 //     }
 
 //     // 4) 查询位图
 //     if (bitmap_test(frame)) {
-//         printf("Frame at phys 0x%x [%u] is **allocated**\n",
+//         kprintf("Frame at phys 0x%x [%u] is **allocated**\n",
 //                page_addr, frame);
 //     } else {
-//         printf("Frame at phys 0x%x [%u] is **available**\n",
+//         kprintf("Frame at phys 0x%x [%u] is **available**\n",
 //                page_addr, frame);
 //     }
 // }

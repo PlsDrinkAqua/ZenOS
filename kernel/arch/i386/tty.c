@@ -1,7 +1,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <string.h>
+#include <libk/string.h>
 
 #include <kernel/tty.h>
 
@@ -42,7 +42,7 @@ void terminal_putentryat(unsigned char c, uint8_t color, size_t x, size_t y) {
 static void terminal_scroll(void) {
     // Move each line up one row
     for (size_t y = 1; y < VGA_HEIGHT; y++) {
-        memcpy(&terminal_buffer[(y - 1) * VGA_WIDTH],
+        kmemcpy(&terminal_buffer[(y - 1) * VGA_WIDTH],
                &terminal_buffer[y * VGA_WIDTH],
                VGA_WIDTH * sizeof(uint16_t));
     }
@@ -82,5 +82,5 @@ void terminal_write(const char* data, size_t size) {
 }
 
 void terminal_writestring(const char* data) {
-    terminal_write(data, strlen(data));
+    terminal_write(data, kstrlen(data));
 }

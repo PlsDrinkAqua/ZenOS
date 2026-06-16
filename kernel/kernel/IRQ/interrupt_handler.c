@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include <kernel/pic.h>
-#include <stdio.h>
+#include <libk/stdio.h>
 
 extern void keyboard_isr();
 extern void timer_isr();
@@ -45,7 +45,7 @@ void page_fault_handler(uint32_t error_code) {
     /* 读 CR2 寄存器，获得发生 Page Fault 的线性地址 */
     __asm__ volatile ("mov %%cr2, %0" : "=r"(faulting_address));
 
-    printf("Page Fault! EIP=0x%x, addr=0x%x, err=0x%x\n",
+    kprintf("Page Fault! EIP=0x%x, addr=0x%x, err=0x%x\n",
            /* 你可以从栈里再取出返回 EIP，或者简化为： */ 0, 
            faulting_address,
            error_code);
@@ -53,9 +53,9 @@ void page_fault_handler(uint32_t error_code) {
     /* 根据 error_code 位含义，决定是保护性错误还是不存在页。 */
     /* bit 0 = 0 (not-present) / 1 (protection fault) */
     if (!(error_code & 0x1)) {
-        printf(" - Page not present\n");
+        kprintf(" - Page not present\n");
     } else {
-        printf(" - Protection violation\n");
+        kprintf(" - Protection violation\n");
     }
 
     /* … 这里可以做缺页中断处理，或者直接死机 … */

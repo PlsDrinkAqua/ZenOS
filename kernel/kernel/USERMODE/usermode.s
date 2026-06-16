@@ -1,7 +1,5 @@
 .global jump_usermode
 jump_usermode:
-    cli
-
     # 先把用户态数据段装进 ds/es/fs/gs
     movw $0x23, %ax
     movw %ax, %ds

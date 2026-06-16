@@ -1,6 +1,6 @@
 #include <stdint.h>
-#include <stdio.h>
-#include <string.h>
+#include <libk/stdio.h>
+#include <libk/string.h>
 
 #include "kernel/ext2_api.h"
 #include "kernel/ext2.h"
@@ -16,10 +16,10 @@ static ext2_file_t file_table[MAX_FD];
 int ext2_init(void) {
     block_devices_init();;
     if (ext2_driver_init() < 0){
-        printf("EXT2 initilization failed!\n");
+        kprintf("EXT2 initilization failed!\n");
         return -1;
     }
-    memset(file_table, 0, sizeof(file_table));
+    kmemset(file_table, 0, sizeof(file_table));
     return 0;
 }
 
@@ -49,7 +49,7 @@ int ext2_read_dir(uint32_t dir_ino,
             struct ext2_dir_entry_2 *de = (void*)(buf + offset);
             if (de->inode) {
                 char name[256];
-                memcpy(name, de->name, de->name_len);
+                kmemcpy(name, de->name, de->name_len);
                 name[de->name_len] = '\0';
                 entry_cb(name, de->inode);
             }
@@ -90,10 +90,10 @@ uint32_t ext2_lookup(uint32_t dir_ino, const char *name) {
                 char entry_name[256];
                 uint32_t len = de->name_len;
                 if (len >= sizeof(entry_name)) len = sizeof(entry_name) - 1;
-                memcpy(entry_name, de->name, len);
+                kmemcpy(entry_name, de->name, len);
                 entry_name[len] = '\0';
 
-                if (strcmp(entry_name, name) == 0) {
+                if (kstrcmp(entry_name, name) == 0) {
                     uint32_t found = de->inode;
                     kfree(buf);
                     return found;
@@ -118,17 +118,17 @@ int ext2_open(const char *path) {
         return -1;
 
     /* 复制一份可改写的路径 */
-    char tmp[strlen(path) + 1];
-    strcpy(tmp, path);
+    char tmp[kstrlen(path) + 1];
+    kstrcpy(tmp, path);
 
     /* 从根 inode 开始逐级 lookup */
     uint32_t ino = EXT2_ROOT_INO;
-    char *saveptr, *tok = strtok_r(tmp, "/", &saveptr);
+    char *saveptr, *tok = kstrtok_r(tmp, "/", &saveptr);
     while (tok) {
         ino = ext2_lookup(ino, tok);
         if (ino == 0)
             return -1;
-        tok = strtok_r(NULL, "/", &saveptr);
+        tok = kstrtok_r(NULL, "/", &saveptr);
     }
 
     /* 分配一个 fd 槽 */
@@ -193,7 +193,7 @@ int ext2_read(int fd, void *buf, size_t count) {
         if (chunk > to_read)       chunk = to_read;
         if (chunk > f->size - f->pos) chunk = f->size - f->pos;
 
-        memcpy((uint8_t*)buf + total_r, tmp + blk_offset, chunk);
+        kmemcpy((uint8_t*)buf + total_r, tmp + blk_offset, chunk);
         f->pos      += chunk;
         total_r     += chunk;
         to_read     -= chunk;
@@ -230,23 +230,23 @@ void ext2_selftest(void) {
         const char *path = paths[i];
         int fd = ext2_open(path);
         if (fd < 0) {
-            printf("open \"%s\" failed.\n", path);
+            kprintf("open \"%s\" failed.\n", path);
             continue;
         }
-        printf("open \"%s\" => fd=%d\n", path, fd);
+        kprintf("open \"%s\" => fd=%d\n", path, fd);
 
         // 假设每个文件内容不超过 128 字节
         char buf[129];
         size_t n = ext2_read(fd, buf, sizeof(buf)-1);
         if ((int)n < 0) {
-            printf("read \"%s\" failed.\n", path);
+            kprintf("read \"%s\" failed.\n", path);
         } else {
             buf[n] = '\0';
-            printf("read \"%s\" => %u bytes: \"%s\"\n",
+            kprintf("read \"%s\" => %u bytes: \"%s\"\n",
                    path, n, buf);
         }
 
         ext2_close(fd);
-        printf("closed fd=%d\n\n", fd);
+        kprintf("closed fd=%d\n\n", fd);
     }
 }

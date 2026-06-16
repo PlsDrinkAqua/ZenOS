@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <string.h>
+#include <libk/string.h>
 
 void vmm_heap_init(void);
 

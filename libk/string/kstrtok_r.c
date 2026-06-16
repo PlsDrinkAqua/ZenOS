@@ -1,7 +1,7 @@
-#include <string.h>
+#include <libk/string.h>
 #include <stdint.h>
 
-char *strtok_r(char *str, const char *delim, char **saveptr) {
+char *kstrtok_r(char *str, const char *delim, char **saveptr) {
     char *start;
     char *p;
 

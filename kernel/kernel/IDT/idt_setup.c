@@ -1,5 +1,5 @@
 #include "kernel/idt.h"
-#include <string.h>  // For memset, if available in your freestanding libc
+#include <libk/string.h>
 
 #define ATA_IRQ_MASTER  (0x20 + 14)  // 0x2E
 #define ATA_IRQ_SECOND  (0x20 + 15)  // 0x2F
@@ -44,7 +44,7 @@ void idt_install(void)
     idtp.base  = (uint32_t)&idt;
 
     /* Clear the IDT */
-    memset(&idt, 0, sizeof(struct idt_entry) * 256);
+    kmemset(&idt, 0, sizeof(struct idt_entry) * 256);
 
 
     /* Example: Set gate for interrupt 0 (divide-by-zero exception) 

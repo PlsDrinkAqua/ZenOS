@@ -22,4 +22,15 @@ isr128:
 
     popa
     addl $8, %esp         # 弹掉 int_num + dummy_error
+
+    # iret restores CS/SS/EIP/ESP/EFLAGS, but not DS/ES/FS/GS.
+    # Restore user data selectors before returning to ring3.
+    pushl %eax
+    movw $0x23, %ax
+    movw %ax, %ds
+    movw %ax, %es
+    movw %ax, %fs
+    movw %ax, %gs
+    popl %eax
+
     iret
