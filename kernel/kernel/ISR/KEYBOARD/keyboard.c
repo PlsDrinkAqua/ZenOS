@@ -1,8 +1,10 @@
 #include <kernel/tty.h>
 #include <kernel/io.h>
+#include <kernel/keyboard.h>
 #include <stdbool.h>
 
 #define KEYBOARD_DATA_PORT 0x60
+#define KEYBOARD_BUFFER_SIZE 128
 
 // Base (un-shifted) map
 static const char scancode_to_ascii[128] = {
@@ -33,6 +35,36 @@ static const char scancode_to_ascii_shift[128] = {
 // Track Shift state
 static bool shift_down = false;
 
+static char key_buffer[KEYBOARD_BUFFER_SIZE];
+static unsigned int key_read_index;
+static unsigned int key_write_index;
+
+static void keyboard_buffer_push(char c) {
+    unsigned int next = (key_write_index + 1) % KEYBOARD_BUFFER_SIZE;
+
+    if (next == key_read_index) {
+        return;
+    }
+
+    key_buffer[key_write_index] = c;
+    key_write_index = next;
+}
+
+int keyboard_getchar(void) {
+    __asm__ volatile ("cli" ::: "memory");
+
+    if (key_read_index == key_write_index) {
+        __asm__ volatile ("sti" ::: "memory");
+        return -1;
+    }
+
+    char c = key_buffer[key_read_index];
+    key_read_index = (key_read_index + 1) % KEYBOARD_BUFFER_SIZE;
+
+    __asm__ volatile ("sti" ::: "memory");
+    return (unsigned char)c;
+}
+
 void keyboard_isr() {
     unsigned char scancode = inb(KEYBOARD_DATA_PORT);
 
@@ -58,7 +90,7 @@ void keyboard_isr() {
         : scancode_to_ascii[scancode];
 
     if (ascii) {
+        keyboard_buffer_push(ascii);
         terminal_putchar(ascii);
     }
 }
-

@@ -1,8 +1,8 @@
 #include <stdint.h>
 #include <kernel/pic.h>
 #include <libk/stdio.h>
+#include <kernel/keyboard.h>
 
-extern void keyboard_isr();
 extern void timer_isr();
 
 typedef struct registers {

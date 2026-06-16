@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <kernel/tty.h>
+#include <kernel/keyboard.h>
 
 enum {
     SYS_PUTCHAR = 0,
@@ -26,6 +27,28 @@ void syscall_handler(registers_t *regs)
     switch (regs->eax) {
         case SYS_PUTCHAR:
             terminal_putchar(regs->ebx);
+            regs->eax = regs->ebx;
+            break;
+
+        case SYS_WRITE: {
+            if (regs->ebx != 1 && regs->ebx != 2) {
+                regs->eax = (uint32_t)-1;
+                break;
+            }
+
+            const char *buf = (const char *)regs->ecx;
+            uint32_t count = regs->edx;
+
+            for (uint32_t i = 0; i < count; i++) {
+                terminal_putchar(buf[i]);
+            }
+
+            regs->eax = count;
+            break;
+        }
+
+        case SYS_GETKEY:
+            regs->eax = (uint32_t)keyboard_getchar();
             break;
 
         default:

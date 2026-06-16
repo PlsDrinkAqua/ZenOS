@@ -6,11 +6,14 @@ CFLAGS?=-O2 -g
 CPPFLAGS?=
 LDFLAGS?=
 LIBS?=
+ifeq ($(origin CC),default)
+CC=$(HOST)-gcc
+endif
 
-CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra
-CPPFLAGS:=$(CPPFLAGS) -I../include
+CFLAGS:=$(CFLAGS) -ffreestanding -fno-builtin -Wall -Wextra
+CPPFLAGS:=$(CPPFLAGS) -I../userlibc/include
 LDFLAGS:=$(LDFLAGS)
-LIBS:=$(LIBS) -nostdlib -lgcc
+LIBS:=$(LIBS) ../userlibc/libc.a -nostdlib -lgcc
 
 # 用户程序不需要 kernel 专用宏
 # 不要加 -D__is_kernel
@@ -26,12 +29,15 @@ LINK_LIST = \
 	$(OBJS) \
 	$(LIBS)
 
-.PHONY: all clean
+.PHONY: all clean userlibc
 .SUFFIXES: .o .c .S
 
 all: $(TARGET)
 
-$(TARGET): $(OBJS) user.ld
+userlibc:
+	$(MAKE) -C ../userlibc
+
+$(TARGET): $(OBJS) userlibc user.ld
 	$(CC) -T user.ld -o $@ $(CFLAGS) $(LINK_LIST)
 
 .c.o:
@@ -43,5 +49,6 @@ $(TARGET): $(OBJS) user.ld
 clean:
 	rm -f $(TARGET)
 	rm -f $(OBJS) *.d
+	$(MAKE) -C ../userlibc clean
 
 -include $(OBJS:.o=.d)
