@@ -98,21 +98,25 @@ static int elf_map_segment_pages(uint32_t seg_vaddr, uint32_t seg_memsz, uint32_
     uint32_t map_start = ALIGN_DOWN(seg_vaddr, PAGE_SIZE);
     uint32_t map_end   = ALIGN_UP(seg_vaddr + seg_memsz, PAGE_SIZE);
 
+    (void)seg_flags;
+
     uint32_t page_flags = VMM_PRESENT | VMM_USER | VMM_RW;
 
     for (uint32_t va = map_start; va < map_end; va += PAGE_SIZE) {
-        uint32_t phys = pmm_alloc_frame();
-        if (!phys) {
-            kprintf("ELF: pmm_alloc_page failed\n");
-            return -1;
-        }
-        if (vmm_map_page(va, phys, page_flags) < 0) {
-            kprintf("ELF: vmm_map_page failed for va=0x%x\n", va);
-            return -1;
+        if (!vmm_translate(va)) {
+            uint32_t phys = pmm_alloc_frame();
+            if (!phys) {
+                kprintf("ELF: pmm_alloc_page failed\n");
+                return -1;
+            }
+            if (vmm_map_page(va, phys, page_flags) < 0) {
+                kprintf("ELF: vmm_map_page failed for va=0x%x\n", va);
+                return -1;
+            }
         }
 
         /* 映射完后把整页清零，避免脏数据 */
-        kmemset((void *)va, 0, 1);
+        kmemset((void *)va, 0, PAGE_SIZE);
     }
 
     return 0;

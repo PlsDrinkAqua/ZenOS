@@ -22,7 +22,7 @@ static void run_command(const char *line) {
     }
 
     if (strcmp(line, "help") == 0) {
-        puts("commands: help, echo, about, clear");
+        puts("commands: help, echo, about, clear, hello");
         return;
     }
 
@@ -33,6 +33,12 @@ static void run_command(const char *line) {
 
     if (strcmp(line, "about") == 0) {
         puts("ZenOS userland shell");
+        return;
+    }
+
+    if (strcmp(line, "hello") == 0) {
+        exec("/hello");
+        printf("exec failed: /hello\n");
         return;
     }
 

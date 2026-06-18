@@ -19,26 +19,21 @@ LIBS:=$(LIBS) ../userlibc/libc.a -nostdlib -lgcc
 # 不要加 -D__is_kernel
 # 不要链接 -lk
 
-TARGET = userprog
-
-OBJS = \
-	userprog.o
-
-LINK_LIST = \
-	$(LDFLAGS) \
-	$(OBJS) \
-	$(LIBS)
+TARGETS = shell hello
 
 .PHONY: all clean userlibc
 .SUFFIXES: .o .c .S
 
-all: $(TARGET)
+all: $(TARGETS)
 
 userlibc:
 	$(MAKE) -C ../userlibc
 
-$(TARGET): $(OBJS) userlibc user.ld
-	$(CC) -T user.ld -o $@ $(CFLAGS) $(LINK_LIST)
+shell: shell.o userlibc user.ld
+	$(CC) -T user.ld -o $@ $(CFLAGS) $(LDFLAGS) shell.o $(LIBS)
+
+hello: hello.o userlibc user.ld
+	$(CC) -T user.ld -o $@ $(CFLAGS) $(LDFLAGS) hello.o $(LIBS)
 
 .c.o:
 	$(CC) -MD -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS)
@@ -47,8 +42,8 @@ $(TARGET): $(OBJS) userlibc user.ld
 	$(CC) -MD -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
 
 clean:
-	rm -f $(TARGET)
-	rm -f $(OBJS) *.d
+	rm -f $(TARGETS)
+	rm -f shell.o hello.o *.d
 	$(MAKE) -C ../userlibc clean
 
--include $(OBJS:.o=.d)
+-include shell.d hello.d

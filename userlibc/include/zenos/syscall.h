@@ -8,6 +8,7 @@ enum {
     SYS_READ    = 3,
     SYS_CLEAR   = 4,
     SYS_EXIT    = 5,
+    SYS_EXEC    = 6,
 };
 
 #ifdef __cplusplus

@@ -26,6 +26,7 @@ string/strcmp.o \
 string/strncmp.o \
 string/strlen.o \
 syscall/syscall.o \
+unistd/exec.o \
 unistd/read.o \
 unistd/write.o \
 zenos/readline.o \

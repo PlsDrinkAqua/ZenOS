@@ -1,3 +1,6 @@
 *.d
 *.kernel
 *.o
+/hello
+/shell
+/userprog

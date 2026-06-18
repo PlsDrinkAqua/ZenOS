@@ -70,12 +70,18 @@ void kernel_main(multiboot_info_t* mbd, uint32_t magic) {
 	user_heap_init();
 	kprintf("done \n");
 
-	kprintf("Loading User Programme.................");
-	elf_load_result_t res;
-	int ret = elf_load_from_file("/userprog", &res);
-	kprintf("elf_load ret=%d entry=0x%x heap=0x%x\n", ret, res.entry, res.heap_start);
-	kprintf("\n");
-	kprintf("done \n");
+        kprintf("Loading User Programme.................");
+        elf_load_result_t res;
+        int ret = elf_load_from_file("/shell", &res);
+        kprintf("elf_load ret=%d entry=0x%x heap=0x%x\n", ret, res.entry, res.heap_start);
+        if (ret < 0) {
+            kprintf("failed to load /shell\n");
+            for (;;) {
+                __asm__ volatile ("hlt");
+            }
+        }
+        kprintf("\n");
+        kprintf("done \n");
 
 	kprintf("Creating User Stack.................");
 	// 先给 user stack 映射一页

@@ -3,7 +3,8 @@ set -e
 
 IMG=ext2_hda.img
 MNT=/mnt/ext2_test
-USERPROG=./user/userprog
+SHELL=./user/shell
+HELLO=./user/hello
 
 . ./config.sh
 make -C user
@@ -21,7 +22,8 @@ echo "hello, ZenOS" | sudo tee "$MNT/hello.txt" > /dev/null
 sudo mkdir -p "$MNT/subdir"
 echo "foo" | sudo tee "$MNT/subdir/bar.dat" > /dev/null
 
-sudo cp "$USERPROG" "$MNT/userprog"
+sudo cp "$SHELL" "$MNT/shell"
+sudo cp "$HELLO" "$MNT/hello"
 
 # 确保写入磁盘
 sync
@@ -35,5 +37,4 @@ mkdir -p disk
 cp "./$IMG" disk/"$IMG"
 
 echo "Generation completed: $IMG with test files created"
-
 
