@@ -1,27 +1,10 @@
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
+#include <zenos/readline.h>
 #include <zenos/terminal.h>
 
 #define LINE_MAX 128
-
-static int streq(const char *a, const char *b) {
-    while (*a && *b && *a == *b) {
-        a++;
-        b++;
-    }
-
-    return *a == '\0' && *b == '\0';
-}
-
-static int starts_with(const char *s, const char *prefix) {
-    while (*prefix) {
-        if (*s++ != *prefix++) {
-            return 0;
-        }
-    }
-
-    return 1;
-}
 
 static void write_str(const char *s) {
     const char *p = s;
@@ -33,58 +16,27 @@ static void write_str(const char *s) {
     write(1, s, (unsigned)(p - s));
 }
 
-static void readline(char *buf, int max) {
-    int len = 0;
-
-    for (;;) {
-        char c;
-
-        if (read(0, &c, 1) != 1) {
-            continue;
-        }
-
-        if (c == '\n') {
-            putchar('\n');
-            buf[len] = '\0';
-            return;
-        }
-
-        if (c == '\b') {
-            if (len > 0) {
-                len--;
-                putchar('\b');
-            }
-            continue;
-        }
-
-        if (len + 1 < max) {
-            buf[len++] = c;
-            putchar(c);
-        }
-    }
-}
-
 static void run_command(const char *line) {
     if (line[0] == '\0') {
         return;
     }
 
-    if (streq(line, "help")) {
+    if (strcmp(line, "help") == 0) {
         puts("commands: help, echo, about, clear");
         return;
     }
 
-    if (streq(line, "clear")) {
+    if (strcmp(line, "clear") == 0) {
         zenos_terminal_clear();
         return;
     }
 
-    if (streq(line, "about")) {
+    if (strcmp(line, "about") == 0) {
         puts("ZenOS userland shell");
         return;
     }
 
-    if (starts_with(line, "echo ")) {
+    if (strncmp(line, "echo ", 5) == 0) {
         puts(line + 5);
         return;
     }
@@ -99,7 +51,7 @@ void _start(void) {
 
     for (;;) {
         write_str("ZenOS> ");
-        readline(line, sizeof(line));
+        zenos_readline(line, sizeof(line));
         run_command(line);
     }
 

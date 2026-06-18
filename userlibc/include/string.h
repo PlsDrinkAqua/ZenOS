@@ -8,6 +8,8 @@ extern "C" {
 #endif
 
 size_t strlen(const char*);
+int strcmp(const char*, const char*);
+int strncmp(const char*, const char*, size_t);
 
 #ifdef __cplusplus
 }

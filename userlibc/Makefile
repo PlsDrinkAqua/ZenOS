@@ -21,10 +21,13 @@ stdio/getchar.o \
 stdio/printf.o \
 stdio/putchar.o \
 stdio/puts.o \
+string/strcmp.o \
+string/strncmp.o \
 string/strlen.o \
 syscall/syscall.o \
 unistd/read.o \
 unistd/write.o \
+zenos/readline.o \
 zenos/terminal.o
 
 .PHONY: all clean
