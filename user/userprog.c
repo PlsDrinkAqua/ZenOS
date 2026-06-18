@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <unistd.h>
+#include <zenos/terminal.h>
 
 #define LINE_MAX 128
 
@@ -69,7 +70,12 @@ static void run_command(const char *line) {
     }
 
     if (streq(line, "help")) {
-        puts("commands: help, echo, about");
+        puts("commands: help, echo, about, clear");
+        return;
+    }
+
+    if (streq(line, "clear")) {
+        zenos_terminal_clear();
         return;
     }
 

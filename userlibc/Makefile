@@ -24,7 +24,8 @@ stdio/puts.o \
 string/strlen.o \
 syscall/syscall.o \
 unistd/read.o \
-unistd/write.o
+unistd/write.o \
+zenos/terminal.o
 
 .PHONY: all clean
 .SUFFIXES: .o .c

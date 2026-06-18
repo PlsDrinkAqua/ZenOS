@@ -7,6 +7,7 @@ enum {
     SYS_WRITE   = 1,
     SYS_GETKEY  = 2,
     SYS_READ    = 3,
+    SYS_CLEAR   = 4,
 };
 
 typedef struct registers {
@@ -74,6 +75,11 @@ void syscall_handler(registers_t *regs)
             regs->eax = read;
             break;
         }
+
+        case SYS_CLEAR:
+            terminal_clear();
+            regs->eax = 0;
+            break;
 
         default:
             regs->eax = (uint32_t)-1;
