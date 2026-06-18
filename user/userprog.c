@@ -36,9 +36,9 @@ static void readline(char *buf, int max) {
     int len = 0;
 
     for (;;) {
-        int c = getchar();
+        char c;
 
-        if (c < 0) {
+        if (read(0, &c, 1) != 1) {
             continue;
         }
 
@@ -57,7 +57,7 @@ static void readline(char *buf, int max) {
         }
 
         if (len + 1 < max) {
-            buf[len++] = (char)c;
+            buf[len++] = c;
             putchar(c);
         }
     }

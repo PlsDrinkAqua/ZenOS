@@ -5,6 +5,7 @@ enum {
     SYS_PUTCHAR = 0,
     SYS_WRITE   = 1,
     SYS_GETKEY  = 2,
+    SYS_READ    = 3,
 };
 
 #ifdef __cplusplus

@@ -1,6 +1,12 @@
 #include <stdio.h>
-#include <zenos/syscall.h>
+#include <unistd.h>
 
 int getchar(void) {
-    return zenos_syscall1(SYS_GETKEY, 0);
+    unsigned char c;
+
+    if (read(0, &c, 1) != 1) {
+        return EOF;
+    }
+
+    return c;
 }

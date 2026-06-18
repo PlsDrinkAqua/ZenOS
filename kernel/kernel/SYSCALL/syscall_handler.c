@@ -6,6 +6,7 @@ enum {
     SYS_PUTCHAR = 0,
     SYS_WRITE   = 1,
     SYS_GETKEY  = 2,
+    SYS_READ    = 3,
 };
 
 typedef struct registers {
@@ -50,6 +51,29 @@ void syscall_handler(registers_t *regs)
         case SYS_GETKEY:
             regs->eax = (uint32_t)keyboard_getchar();
             break;
+
+        case SYS_READ: {
+            if (regs->ebx != 0) {
+                regs->eax = (uint32_t)-1;
+                break;
+            }
+
+            char *buf = (char *)regs->ecx;
+            uint32_t count = regs->edx;
+            uint32_t read = 0;
+
+            while (read < count) {
+                int c = keyboard_getchar();
+                if (c < 0) {
+                    break;
+                }
+
+                buf[read++] = (char)c;
+            }
+
+            regs->eax = read;
+            break;
+        }
 
         default:
             regs->eax = (uint32_t)-1;

@@ -23,6 +23,7 @@ stdio/putchar.o \
 stdio/puts.o \
 string/strlen.o \
 syscall/syscall.o \
+unistd/read.o \
 unistd/write.o
 
 .PHONY: all clean
