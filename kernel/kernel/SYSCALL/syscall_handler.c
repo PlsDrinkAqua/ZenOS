@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <libk/stdio.h>
 #include <kernel/tty.h>
 #include <kernel/keyboard.h>
 
@@ -8,6 +9,7 @@ enum {
     SYS_GETKEY  = 2,
     SYS_READ    = 3,
     SYS_CLEAR   = 4,
+    SYS_EXIT    = 5,
 };
 
 typedef struct registers {
@@ -79,6 +81,13 @@ void syscall_handler(registers_t *regs)
         case SYS_CLEAR:
             terminal_clear();
             regs->eax = 0;
+            break;
+
+        case SYS_EXIT:
+            kprintf("\nuser program exited with status %d\n", regs->ebx);
+            for (;;) {
+                __asm__ volatile ("hlt");
+            }
             break;
 
         default:

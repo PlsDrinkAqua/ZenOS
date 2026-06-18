@@ -21,6 +21,7 @@ stdio/getchar.o \
 stdio/printf.o \
 stdio/putchar.o \
 stdio/puts.o \
+stdlib/exit.o \
 string/strcmp.o \
 string/strncmp.o \
 string/strlen.o \
