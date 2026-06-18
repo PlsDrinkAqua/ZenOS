@@ -18,6 +18,7 @@ TARGET=libc.a
 
 OBJS=\
 stdio/getchar.o \
+stdio/printf.o \
 stdio/putchar.o \
 stdio/puts.o \
 string/strlen.o \

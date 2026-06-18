@@ -43,6 +43,7 @@ static void readline(char *buf, int max) {
         }
 
         if (c == '\n') {
+            putchar('\n');
             buf[len] = '\0';
             return;
         }
@@ -50,12 +51,14 @@ static void readline(char *buf, int max) {
         if (c == '\b') {
             if (len > 0) {
                 len--;
+                putchar('\b');
             }
             continue;
         }
 
         if (len + 1 < max) {
             buf[len++] = (char)c;
+            putchar(c);
         }
     }
 }
@@ -80,14 +83,13 @@ static void run_command(const char *line) {
         return;
     }
 
-    write_str("unknown command: ");
-    puts(line);
+    printf("unknown command: %s\n", line);
 }
 
 void _start(void) {
     char line[LINE_MAX];
 
-    puts("ZenOS shell");
+    printf("ZenOS shell at %x\n", 0x08048000);
 
     for (;;) {
         write_str("ZenOS> ");

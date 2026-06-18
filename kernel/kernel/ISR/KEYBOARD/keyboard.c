@@ -1,4 +1,3 @@
-#include <kernel/tty.h>
 #include <kernel/io.h>
 #include <kernel/keyboard.h>
 #include <stdbool.h>
@@ -91,6 +90,5 @@ void keyboard_isr() {
 
     if (ascii) {
         keyboard_buffer_push(ascii);
-        terminal_putchar(ascii);
     }
 }
